@@ -8,18 +8,19 @@ import { Registrarse } from './paginas/Registrarse';
 import { AdminPedidos } from './paginas/admin/AdminPedidos';
 import { AdminProductos } from './paginas/admin/AdminProductos';
 import { Error404 } from './componentes/Error404';
+import { getCookie } from './helps/token';
 
 function App() {
+ 
   return (
     <>
       <BrowserRouter>
       {/* <AuthProvider> */}
-         <NavBar/>
+      {getCookie("token") && <NavBar/>}
+         
         <Routes>
           <Route path="/" element={<Login />}/>
           <Route path="/registro" element={<Registrarse />}/>
-
-          
           <Route path="/admin">
              <Route path="/admin/produccion" element={<AdminProductos/>} />
              <Route path="/admin/clientes" element={<AdminClientes/>} />

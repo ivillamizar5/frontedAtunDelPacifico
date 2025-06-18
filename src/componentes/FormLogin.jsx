@@ -1,7 +1,12 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
+import { Message } from './Message'
 
-export default function FormLogin() {
+export default function FormLogin({handleChange, handleSubmit, msg}) {
+
+
+
+
   return (
     <>
 <div className="container  rounded">
@@ -11,15 +16,17 @@ export default function FormLogin() {
   </p>
   <form>
     <div className="mb-3">
-      <label htmlFor="email" className="form-label fw-semibold">
-        Email
+      <label htmlFor="username" className="form-label fw-semibold">
+        Nombre de usuario
       </label>
       <input
-        type="email"
+        type="username"
         className="form-control"
-        id="email"
-        placeholder="name@mail.com"
-        required=""
+        id="username"
+        placeholder="nombre de usuario"
+        onChange={handleChange}
+        name="username"
+        required
       />
     </div>
     <div className="mb-4">
@@ -31,11 +38,14 @@ export default function FormLogin() {
         className="form-control"
         id="password"
         placeholder="********"
-        required=""
+        onChange={handleChange}
+        name="password"
+        required
       />
     </div>
+      { msg && <Message msg="Error al ingresar los datos del usuario y contraseña"/>}
     <div className="d-grid">
-      <button type="submit" className="btn btn-dark fw-semibold">
+      <button type="submit" className="btn btn-dark fw-semibold" onClick={handleSubmit}>
         Ingresar
       </button>
     </div>
