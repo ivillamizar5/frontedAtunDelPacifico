@@ -1,29 +1,21 @@
+export function decodeJWT() {
+  const tokenRaw = localStorage.getItem("token");
+  if (!tokenRaw) throw new Error("No hay token");
 
-export const token = (token) => {
-    if(token){
-        console.log("Token guardado en localStorage " , token);
-        localStorage.setItem("token", JSON.stringify(token));
-    }else{
-        localStorage.removeItem("token");
-    }
-}
+  const token = JSON.parse(tokenRaw); // Des-serializar el string
 
-// Función para decodificar Base64Url a texto
-export function base64Decode(str) {
+  const parts = token.split('.');
+  if (parts.length !== 3) {
+    throw new Error('El token no tiene el formato correcto');
+  }
+
+  const base64Decode = (str) => {
     const base64 = str.replace(/-/g, '+').replace(/_/g, '/');
-    return atob(base64);
-}
+    // Asegura padding correcto
+    const padded = base64.padEnd(base64.length + (4 - base64.length % 4) % 4, '=');
+    return atob(padded);
+  };
 
-// Función para decodificar el JWT
-export function decodeJWT(token) {
-    const parts = token.split('.');
-    if (parts.length !== 3) {
-        throw new Error('El token no tiene el formato correcto');
-    }
-
-    const header = JSON.parse(base64Decode(parts[0]));  // Decodificar encabezado
-    const payload = JSON.parse(base64Decode(parts[1]));  // Decodificar payload
-    const signature = parts[2];  // La firma no se decodifica, pero la mostramos
-
-    return { header, payload, signature };  // Retorna las tres partes
+  const payload = JSON.parse(base64Decode(parts[1]));
+  return payload; // Devolver el payload completo
 }

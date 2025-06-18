@@ -1,13 +1,12 @@
 import React from "react";
-import { FormRegistro } from "./FormRegistro";
+export const ModalForm = ({id, Componente}) => {
 
-export const ModalFormUsuarios = () => {
   return (
     <>
       {/* Modal */}
       <div
         className="modal fade"
-        id="exampleModal"
+        id={id}
         tabIndex={-1}
         aria-labelledby="exampleModalLabel"
         aria-hidden="true"
@@ -26,7 +25,7 @@ export const ModalFormUsuarios = () => {
               />
             </div>
             <div className="modal-body">
-                <FormRegistro/>
+                {Componente}
             </div>
           </div>
         </div>

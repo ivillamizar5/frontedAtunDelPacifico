@@ -1,48 +1,13 @@
 import React, { useState } from "react";
-import { ModalFormUsuarios } from "./ModalFormUsuarios.";
-import { ModalEliminar } from "./ModalEliminar";
 
-  const header = ["USUARIO","FUNCIÓN","ESTADO","ACCIÓN"];
-  const users = [
-    {
-      name: "John Michael",
-      email: "john@creative-tim.com",
-      role: "Manager",
-      area: "Organization",
-      status: "ONLINE",
-    },
-    {
-      name: "Alexa Liras",
-      email: "alexa@creative-tim.com",
-      role: "Programator",
-      area: "Developer",
-      status: "OFFLINE",
-    },
-    {
-      name: "Michael Levi",
-      email: "michael@creative-tim.com",
-      role: "Programator",
-      area: "Developer",
-      status: "ONLINE",
-    },
-    {
-      name: "Bruce Mars",
-      email: "bruce@creative-tim.com",
-      role: "Manager",
-      area: "Executive",
-      status: "OFFLINE",
-    },
-    {
-      name: "Alexander",
-      email: "alexander@creative-tim.com",
-      role: "Programator",
-      area: "Developer",
-      status: "OFFLINE",
-    },
-  ];
+import { RowsTable } from "./RowsTable";
+import { ModalForm } from "./Modal/ModalForm";
+import { FormRegistro } from "./FormRegistro";
+import { useLocation } from 'react-router-dom';
+import { useEffect } from "react";
+import { FromProductoLote } from "./FromProductoLote";
 
-
-export const Table = ({nombreTabla, tableHeaderprops}) => {
+export const Table = ({nombreTabla, tableHeaderprops, data, setdataToEdit,deleteData }) => {
 
  const [tableHeader, setTableHeader] = useState(tableHeaderprops || header)
 
@@ -52,15 +17,33 @@ export const Table = ({nombreTabla, tableHeaderprops}) => {
   // Paginación
   const indexOfLast = currentPage * usersPerPage;
   const indexOfFirst = indexOfLast - usersPerPage;
-  const currentUsers = users.slice(indexOfFirst, indexOfLast);
-  const totalPages = Math.ceil(users.length / usersPerPage);
+  const currentUsers = data.slice(indexOfFirst, indexOfLast);
+  const totalPages = Math.ceil(data.length / usersPerPage);
 
   const handlePageChange = (pageNumber) => setCurrentPage(pageNumber); 
 
+  const location = useLocation();
+  const [nombremodal, setnombremodal] = useState(null);
+  const [componente, setcomponente] = useState(null)
+
+useEffect(() => {
+ 
+ switch (location.pathname) {
+  case "/admin/produccion":
+      setnombremodal("ModalFormLote")
+      setcomponente(<FromProductoLote/>)
+    break;
+ 
+  default:
+    break;
+ }
+
+}, [location.pathname])
+
+
   return (
    <>
-    <ModalFormUsuarios/>
-    <ModalEliminar/>
+    <ModalForm id={nombremodal} Componente={componente}/>
     <div className="container my-5">
       <div className="card">
         <div className="card-header">Tabla de {nombreTabla}</div>
@@ -72,35 +55,22 @@ export const Table = ({nombreTabla, tableHeaderprops}) => {
               </tr>
             </thead>
             <tbody>
-              {currentUsers.map((user, i) => (
-                <tr key={i}>
-                  <td>
-                    <div className="fw-bold">{user.name}</div>
-                    <div className="text-muted small">{user.email}</div>
-                  </td>
-                  <td>
-                    <div className="fw-semibold">{user.role}</div>
-                  </td>
-                  <td>
-                    <span
-                      className={`badge ${
-                        user.status === "ONLINE"
-                          ? "text-bg-success"
-                          : "text-bg-secondary"
-                      }`}
-                    >
-                      {user.status}
-                    </span>
-                  </td>
-                  <td>
-                    <button   data-bs-toggle="modal"  data-bs-target="#exampleModal" className=" ms-3 mt-1  fas fa-edit border border-0 text-primary">
-                    </button>
-                    <button  data-bs-toggle="modal" data-bs-target="#staticBackdrop" className=" ms-3 mt-1 fas fa-trash-alt border border-0 text-danger">
-                      
-                    </button>
-                  </td>
+
+               {currentUsers.length>0 
+                ? data.map(el => 
+                <RowsTable 
+                    key={el.id} 
+                    el={el}
+                    deleteData={deleteData}
+                    setdataToEdit={setdataToEdit}
+                    modal={nombremodal}
+                />)
+                :(  
+                <tr>
+                    <td colSpan={"12"}> Sin datos</td>
                 </tr>
-              ))}
+                )
+                }
             </tbody>
           </table>
         </div>
