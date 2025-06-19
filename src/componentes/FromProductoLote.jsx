@@ -11,21 +11,17 @@ const initialForm = {
 
 export const FromProductoLote = ({
   createData,
+  updateData,
+  patchData,
   dataToEdit,
   setdataToEdit,
+  isModal = false,
 }) => {
   const [form, setform] = useState(initialForm);
 
-  const handleChange = (e) => {
-    setform({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
-  };
-
   useEffect(() => {
-    if (dataToEdit) {
-      console.log("Editar", dataToEdit);
+    if (dataToEdit && isModal) {
+      console.log("Editando en modal:", dataToEdit);
       setform({
         id: dataToEdit.id,
         codigo_lote: dataToEdit.codigoLote,
@@ -37,61 +33,70 @@ export const FromProductoLote = ({
     } else {
       setform(initialForm);
     }
-  }, [dataToEdit]);
+  }, [dataToEdit, isModal]);
+
+  const handleChange = (e) => {
+    setform({
+      ...form,
+      [e.target.name]: e.target.value,
+    });
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log("Formulario actual:", form);
 
-    // Validaciones
-    if (!form.codigo_lote) {
-      alert("Datos incompletos: código de lote");
-      return;
-    }
-    if (!form.fecha_produccion) {
-      alert("Datos incompletos: fecha de producción");
-      return;
-    }
-    if (!form.producto_id) {
-      alert("Datos incompletos: tipo de producto");
-      return;
-    }
-    if (!form.cantidad) {
-      alert("Datos incompletos: cantidad");
-      return;
-    }
-    if (!form.estado) {
-      alert("Datos incompletos: estado");
-      return;
-    }
+    // Validaciones (solo para el formulario inicial)
+    if (!isModal) {
+      if (!form.codigo_lote) {
+        alert("Datos incompletos: código de lote");
+        return;
+      }
+      if (!form.fecha_produccion) {
+        alert("Datos incompletos: fecha de producción");
+        return;
+      }
+      if (!form.producto_id) {
+        alert("Datos incompletos: tipo de producto");
+        return;
+      }
+      if (!form.cantidad) {
+        alert("Datos incompletos: cantidad");
+        return;
+      }
+      if (!form.estado) {
+        alert("Datos incompletos: estado");
+        return;
+      }
 
-    // Transformar el form al formato esperado por el backend
-    const formattedData = {
-      codigoLote: form.codigo_lote,
-      fechaProduccion: form.fecha_produccion,
-      producto: {
-        id: parseInt(form.producto_id), // Convertir a número
-      },
-      cantidad: parseInt(form.cantidad), // Convertir a número
-      estado: form.estado,
-    };
+      const formattedData = {
+        codigoLote: form.codigo_lote,
+        fechaProduccion: form.fecha_produccion,
+        producto: {
+          id: parseInt(form.producto_id),
+        },
+        cantidad: parseInt(form.cantidad),
+        estado: form.estado,
+      };
 
-    // Incluir id solo si existe (para edición)
-    if (form.id !== null) {
-      formattedData.id = form.id;
-    }
+      if (form.id !== null) {
+        formattedData.id = form.id;
+      }
 
-    console.log("Datos enviados:", formattedData);
-
-    // Enviar datos
-    if (form.id === null) {
+      console.log("Datos enviados:", formattedData);
       createData(formattedData);
-    } else {
-      console.log("actualizar--")
-      // updateData(formattedData); // Descomentar si implementas updateData
+      handleReset();
+    }
+  };
+
+  const handlePatch = () => {
+    if (!form.id) {
+      alert("No se puede actualizar: ID no definido");
+      return;
     }
 
-    handleReset();
+    const patchDataPayload = { estado: form.estado };
+    patchData(form.id, patchDataPayload);
   };
 
   const handleReset = () => {
@@ -100,8 +105,35 @@ export const FromProductoLote = ({
   };
 
   return (
-    <>
-      <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit}>
+      {isModal ? (
+        // Formulario del modal: solo el select de estado y botón Actualizar
+        <div className="mb-3">
+          <label htmlFor="estado" className="form-label">
+            Estado
+          </label>
+          <div className="input-group">
+            <select
+              className="form-select"
+              id="estado"
+              required
+              name="estado"
+              value={form.estado}
+              onChange={handleChange}
+            >
+              <option value="Defectuoso">Defectuoso</option>
+            </select>
+            <button
+              type="button"
+              className="btn btn-outline-primary"
+              onClick={handlePatch}
+            >
+              Actualizar
+            </button>
+          </div>
+        </div>
+      ) : (
+        // Formulario inicial: todos los campos
         <div className="row">
           <div className="col-md-6">
             <div className="mb-3">
@@ -118,6 +150,8 @@ export const FromProductoLote = ({
                 name="codigo_lote"
                 onChange={handleChange}
               />
+            </div>
+            <div className="mb-3">
               <label htmlFor="fecha_produccion" className="form-label">
                 Fecha de Producción
               </label>
@@ -164,7 +198,6 @@ export const FromProductoLote = ({
               />
             </div>
           </div>
-
           <div className="col-md-6">
             <div className="mb-3">
               <label htmlFor="estado" className="form-label">
@@ -180,20 +213,18 @@ export const FromProductoLote = ({
               >
                 <option value="">Seleccione</option>
                 <option value="Disponible">Disponible</option>
-                <option value="En_Proceso">En Proceso</option>
-                <option value="Enviado">Enviado</option>
-                <option value="Cancelado">Cancelado</option>
+                <option value="Vendido">Vendido</option>
+                <option value="Defectuoso">Defectuoso</option>
               </select>
             </div>
           </div>
+          <div className="d-grid mt-3">
+            <button type="submit" className="btn btn-dark fw-semibold">
+              Registrar Lote
+            </button>
+          </div>
         </div>
-
-        <div className="d-grid mt-3">
-          <button type="submit" className="btn btn-dark fw-semibold">
-            Registrar Lote
-          </button>
-        </div>
-      </form>
-    </>
+      )}
+    </form>
   );
 };

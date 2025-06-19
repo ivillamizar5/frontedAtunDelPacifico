@@ -1,80 +1,239 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
-export const FormRegistro = () => {
+const initialForm = {
+  correo: "",
+  direccion: "",
+  estado: "Activo",
+  id: null,
+  identificacion: "",
+  nombre: "",
+  telefono: "",
+  password: "",
+  confirmPassword: "",
+};
+
+export const FormRegistro = ({
+  createData,
+  updateData,
+  dataToEdit,
+  setdataToEdit,
+  isModal = false,
+}) => {
+  const [form, setform] = useState(initialForm);
   const location = useLocation();
   const pathName = location.pathname;
 
+  // Prefijo para IDs únicos
+  const idPrefix = isModal ? "modal-" : "form-";
+
+  useEffect(() => {
+    if (dataToEdit && isModal) {
+      console.log("Editando en modal:", dataToEdit);
+      setform({
+        id: dataToEdit.id,
+        correo: dataToEdit.correo,
+        direccion: dataToEdit.direccion,
+        estado: dataToEdit.estado,
+        identificacion: dataToEdit.identificacion,
+        nombre: dataToEdit.nombre,
+        telefono: dataToEdit.telefono,
+        password: "",
+        confirmPassword: "",
+      });
+    } else {
+      setform(initialForm);
+    }
+  }, [dataToEdit, isModal]);
+
+  const handleChange = (e) => {
+    setform({
+      ...form,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log("Formulario actual:", form);
+
+    // Validaciones
+    if (!form.correo) {
+      alert("Datos incompletos: correo");
+      return;
+    }
+    if (!form.direccion) {
+      alert("Datos incompletos: dirección");
+      return;
+    }
+    if (!form.identificacion) {
+      alert("Datos incompletos: identificación");
+      return;
+    }
+    if (!form.nombre) {
+      alert("Datos incompletos: nombre");
+      return;
+    }
+    if (!form.telefono) {
+      alert("Datos incompletos: teléfono");
+      return;
+    }
+
+    // Validaciones específicas
+    if (pathName === "/registro" || isModal) {
+      if (!form.password) {
+        alert("Datos incompletos: contraseña");
+        return;
+      }
+      if (form.password !== form.confirmPassword) {
+        alert("Las contraseñas no coinciden");
+        return;
+      }
+    }
+
+    if (isModal && !form.estado) {
+      alert("Datos incompletos: estado");
+      return;
+    }
+
+    // Preparar datos para enviar
+    const formattedData = {
+      correo: form.correo,
+      direccion: form.direccion,
+      identificacion: form.identificacion,
+      nombre: form.nombre,
+      telefono: form.telefono,
+    };
+
+    if (form.id !== null) {
+      formattedData.id = form.id;
+    }
+
+    if (pathName === "/registro" || (isModal && form.password)) {
+      formattedData.password = form.password;
+    }
+
+    if (isModal) {
+      formattedData.estado = form.estado;
+      formattedData.rol = form.rol || "cliente";
+    }
+
+    console.log("Datos enviados:", formattedData);
+
+    // Enviar datos
+    if (form.id === null) {
+      createData(formattedData);
+    } else {
+      updateData(formattedData);
+    }
+
+    handleReset();
+  };
+
+  const handleReset = () => {
+    setform(initialForm);
+    setdataToEdit(null);
+  };
+
   return (
-    <form>
+    <form onSubmit={handleSubmit}>
       <div className="row">
         {/* Primera columna */}
         <div className="col-md-6">
           <div className="mb-3">
-            <label htmlFor="name" className="form-label fw-semibold">
+            <label htmlFor={`${idPrefix}nombre`} className="form-label fw-semibold">
               Nombre de la empresa o cliente
             </label>
             <input
               type="text"
               className="form-control"
-              id="name"
+              id={`${idPrefix}nombre`}
               placeholder="Juan Pérez"
+              value={form.nombre}
+              onChange={handleChange}
+              name="nombre"
             />
           </div>
           <div className="mb-3">
-            <label htmlFor="identificación" className="form-label fw-semibold">
+            <label htmlFor={`${idPrefix}identificacion`} className="form-label fw-semibold">
               RUC o identificación
             </label>
             <input
               type="text"
               className="form-control"
-              id="identificación"
-              placeholder="identificación"
+              id={`${idPrefix}identificacion`}
+              placeholder="Identificación"
+              value={form.identificacion}
+              onChange={handleChange}
+              name="identificacion"
             />
           </div>
           <div className="mb-3">
-            <label htmlFor="email" className="form-label fw-semibold">
+            <label htmlFor={`${idPrefix}direccion`} className="form-label fw-semibold">
+              Dirección
+            </label>
+            <input
+              type="text"
+              className="form-control"
+              id={`${idPrefix}direccion`}
+              placeholder="Dirección"
+              value={form.direccion}
+              onChange={handleChange}
+              name="direccion"
+            />
+          </div>
+          <div className="mb-3">
+            <label htmlFor={`${idPrefix}correo`} className="form-label fw-semibold">
               Correo electrónico
             </label>
             <input
               type="email"
               className="form-control"
-              id="email"
+              id={`${idPrefix}correo`}
               placeholder="name@mail.com"
+              value={form.correo}
+              onChange={handleChange}
+              name="correo"
             />
           </div>
           <div className="mb-3">
-            <label htmlFor="telefono" className="form-label fw-semibold">
+            <label htmlFor={`${idPrefix}telefono`} className="form-label fw-semibold">
               Teléfono
             </label>
             <input
               type="text"
               maxLength={10}
               className="form-control"
-              id="telefono"
+              id={`${idPrefix}telefono`}
               placeholder="3001234567"
+              value={form.telefono}
+              onChange={handleChange}
+              name="telefono"
             />
           </div>
         </div>
 
         {/* Segunda columna */}
         <div className="col-md-6">
-          {pathName === "/registro" ? (
+          {(pathName === "/registro" || isModal) && (
             <>
               <div className="mb-3">
-                <label htmlFor="password" className="form-label fw-semibold">
+                <label htmlFor={`${idPrefix}password`} className="form-label fw-semibold">
                   Contraseña
                 </label>
                 <input
                   type="password"
                   className="form-control"
-                  id="password"
+                  id={`${idPrefix}password`}
                   placeholder="********"
+                  value={form.password}
+                  onChange={handleChange}
+                  name="password"
                 />
               </div>
               <div className="mb-4">
                 <label
-                  htmlFor="confirmPassword"
+                  htmlFor={`${idPrefix}confirmPassword`}
                   className="form-label fw-semibold"
                 >
                   Confirmar contraseña
@@ -82,28 +241,46 @@ export const FormRegistro = () => {
                 <input
                   type="password"
                   className="form-control"
-                  id="confirmPassword"
+                  id={`${idPrefix}confirmPassword`}
                   placeholder="********"
+                  value={form.confirmPassword}
+                  onChange={handleChange}
+                  name="confirmPassword"
                 />
               </div>
             </>
-          ) : (
+          )}
+          {isModal && (
             <>
               <div className="mb-3">
-                <label htmlFor="rol" className="form-label fw-semibold">
+                <label htmlFor={`${idPrefix}rol`} className="form-label fw-semibold">
                   Rol
                 </label>
-                <select className="form-select " id="rol">
+                <select
+                  className="form-select"
+                  id={`${idPrefix}rol`}
+                  name="rol"
+                 
+
+ value={form.rol || "cliente"}
+                  onChange={handleChange}
+                >
                   <option value="">Seleccione un rol</option>
                   <option value="cliente">Cliente</option>
                   <option value="operador">Operador</option>
                 </select>
               </div>
               <div className="mb-3">
-                <label htmlFor="estado" className="form-label fw-semibold">
+                <label htmlFor={`${idPrefix}estado`} className="form-label fw-semibold">
                   Estado
                 </label>
-                <select className="form-select" id="estado">
+                <select
+                  className="form-select"
+                  id={`${idPrefix}estado`}
+                  name="estado"
+                  value={form.estado}
+                  onChange={handleChange}
+                >
                   <option value="">Seleccione un estado</option>
                   <option value="Activo">Activo</option>
                   <option value="Inactivo">Inactivo</option>
@@ -116,7 +293,7 @@ export const FormRegistro = () => {
 
       <div className="d-grid mt-3">
         <button type="submit" className="btn btn-dark fw-semibold">
-          Registrar
+          {isModal ? "Actualizar" : "Registrar"}
         </button>
       </div>
 
@@ -130,280 +307,3 @@ export const FormRegistro = () => {
     </form>
   );
 };
-
-
-
-
-// import React, { useEffect, useState } from "react";
-// import { Link, useLocation } from "react-router-dom";
-
-// const initialForm = {
-//   correo: "",
-//   direccion: "",
-//   estado: "",
-//   id: null,
-//   identificacion: "",
-//   nombre: "",
-//   telefono: "",
-// };
-
-// export const FormRegistro = ({createData, dataToEdit, setdataToEdit}) => {
-//   const [form, setform] = useState(initialForm);
-
-//   const handleChange = (e) => {
-//     setform({
-//       ...form,
-//       [e.target.name]: e.target.value,
-//     });
-//   };
-
-//  useEffect(() => {
-//     if (dataToEdit) {
-//       console.log("Editar", dataToEdit);
-//       setform({
-//         id: dataToEdit.id,
-//         correo: dataToEdit.correo,
-//         direccion: dataToEdit.direccion,
-//         estado: dataToEdit.estado,
-//         identificacion: dataToEdit.identificacion,
-//         nombre: dataToEdit.nombre,
-//         telefono: dataToEdit.telefono,
-//       });
-//     } else {
-//       setform(initialForm);
-//     }
-//   }, [dataToEdit]);
-
-
-
-//   const handleSubmit = (e) => {
-//     e.preventDefault();
-//     console.log("Formulario actual:", form);
-
-//     // Validaciones
-//     if (!form.correo) {
-//       alert("Datos incompletos: correo");
-//       return;
-//     }
-//     if (!form.direccion) {
-//       alert("Datos incompletos: direccion");
-//       return;
-//     }
-//     if (!form.estado) {
-//       alert("Datos incompletos: estado");
-//       return;
-//     }
-//     if (!form.identificacion) {
-//       alert("Datos incompletos: identificacion");
-//       return;
-//     }
-
-//     if (form.password === undefined || form.password === null) {
-//       return;
-//     }else if(!form.password ){ 
-//       alert("Datos incompletos: Contraseña");
-//       return;
-//     }
-
-//     if (!form.nombre) {
-//       alert("Datos incompletos: nombre");
-//       return;
-//     }
-
-//     if (!form.telefono) {
-//       alert("Datos incompletos: telefono");
-//       return;
-//     }
-
-
-//     // Incluir id solo si existe (para edición)
-//     if (form.id !== null) {
-//       form.id = form.id;
-//     }
-
-//     console.log("Datos enviados:", form);
-
-//     // Enviar datos
-//     if (form.id === null) {
-//         console.log(form)
-//       createData(form);
-//     } else {
-//       console.log("actualizar--")
-//       // updateData(formattedData); // Descomentar si implementas updateData
-//     }
-
-//     handleReset();
-//   };
-
-//   const handleReset = () => {
-//     setform(initialForm);
-//     setdataToEdit(null);
-//   };
-
-
-//   const location = useLocation();
-//   const pathName = location.pathname;
-
-
-//   if(pathName === "/registro" ){
-//     setform()
-//   }
-
-
-
-//   return (
-//     <form onSubmit={handleSubmit}>
-//       <div className="row">
-//         {/* Primera columna */}
-//         <div className="col-md-6">
-//           <div className="mb-3">
-//             <label htmlFor="name" className="form-label fw-semibold">
-//               Nombre de la empresa o cliente
-//             </label>
-//             <input
-//               type="text"
-//               className="form-control"
-//               id="name"
-//               placeholder="Juan Pérez"
-//               value={form.nombre}
-//               onChange={handleChange}
-//               name="nombre"
-//             />
-//           </div>
-//           <div className="mb-3">
-//             <label htmlFor="identificación" className="form-label fw-semibold">
-//               RUC o identificación
-//             </label>
-//             <input
-//               type="text"
-//               className="form-control"
-//               id="identificación"
-//               placeholder="identificación"
-//               value={form.identificacion}
-//               onChange={handleChange}
-//               name="identificacion"
-
-//             />
-//           </div>
-
-//           <div className="mb-3">
-//             <label htmlFor="direccion" className="form-label fw-semibold">
-//               Direccion
-//             </label>
-//             <input
-//               type="text"
-//               className="form-control"
-//               id="direccion"
-//               placeholder="Direccion"
-//               value={form.direccion}
-//               onChange={handleChange}
-//               name="direccion"
-
-//             />
-//           </div>
-//           <div className="mb-3">
-//             <label htmlFor="correo" className="form-label fw-semibold">
-//               Correo electrónico
-//             </label>
-//             <input
-//               type="email"
-//               className="form-control"
-//               id="correo"
-//               placeholder="name@mail.com"
-//               value={form.correo}
-//               onChange={handleChange}
-//               name="correo"
-//             />
-//           </div>
-//           <div className="mb-3">
-//             <label htmlFor="telefono" className="form-label fw-semibold">
-//               Teléfono
-//             </label>
-//             <input
-//               type="text"
-//               maxLength={10}
-//               className="form-control"
-//               id="telefono"
-//               placeholder="3001234567"
-//               value={form.telefono}
-//               onChange={handleChange}
-//               name="telefono"
-//             />
-//           </div>
-//         </div>
-
-//         {/* Segunda columna */}
-//         <div className="col-md-6">
-//           {pathName === "/registro" ? (
-//             <>
-//               <div className="mb-3">
-//                 <label htmlFor="password" className="form-label fw-semibold">
-//                   Contraseña
-//                 </label>
-//                 <input
-//                   type="password"
-//                   className="form-control"
-//                   id="password"
-//                   placeholder="********"
-//                   // name="password"
-//                   // onChange={handleChange}
-//                 />
-//               </div>
-//               <div className="mb-4">
-//                 <label
-//                   htmlFor="confirmPassword"
-//                   className="form-label fw-semibold"
-//                 >
-//                   Confirmar contraseña
-//                 </label>
-//                 <input
-//                   type="password"
-//                   className="form-control"
-//                   id="confirmPassword"
-//                   placeholder="********"
-//                 />
-//               </div>
-//             </>
-//           ) : (
-//             <>
-//               <div className="mb-3">
-//                 <label htmlFor="rol" className="form-label fw-semibold">
-//                   Rol
-//                 </label>
-//                 <select className="form-select " id="rol" onChange={handleChange} value={"Cliente"} >  {/* Verificar */}
-//                   <option value="">Seleccione un rol</option>
-//                   <option value="cliente">Cliente</option>
-//                   <option value="operador">Operador</option>
-//                 </select>
-//               </div>
-//               <div className="mb-3">
-//                 <label htmlFor="estado" className="form-label fw-semibold">
-//                   Estado
-//                 </label>
-//                 <select className="form-select" id="estado" onChange={handleChange} value={form.estado} name="estado">
-//                   <option value="">Seleccione un estado</option>
-//                   <option value="Activo">Activo</option>
-//                   <option value="Inactivo">Inactivo</option>
-//                 </select>
-//               </div>
-//             </>
-//           )}
-//         </div>
-//       </div>
-
-//       <div className="d-grid mt-3">
-//         <button type="submit" className="btn btn-dark fw-semibold">
-//           Registrar
-//         </button>
-//       </div>
-
-//       {pathName === "/registro" && (
-//         <div className="d-grid mt-3">
-//           <Link to="/" className="btn btn-outline-secondary fw-semibold">
-//             Volver
-//           </Link>
-//         </div>
-//       )}
-//     </form>
-//   );
-// };

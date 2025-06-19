@@ -12,19 +12,20 @@ export const AuthProvider = ({ children }) => {
   const login = (token) => {
     localStorage.setItem('token', JSON.stringify(token)); // Almacenar como JSON
     const decoded = decodeJWT(); // Obtener el payload completo
-    console.log(decoded , " completo")
+    console.log("Decoded JWT:", decoded); // Depurar el JWT decodificado
     setUser(decoded); // Almacenar el payload como user
 
-    // Redirigir según el rol (usar decoded.rol o decoded.sub según tu backend)
-    const rol = decoded.rol || decoded.sub; // Ajustar según el campo que uses
+    // Redirigir según el rol (normalizar a minúsculas)
+    const rol = decoded.role ? decoded.role.toLowerCase() : "";
     switch (rol) {
-      case 'admin':
+      case 'administrador':
         navigate('/admin/produccion');
         break;
       case 'operador':
         navigate('/operador/dashboard');
         break;
       case 'cliente':
+        console.log("Navegando a cliente/home");
         navigate('/cliente/home');
         break;
       default:
@@ -45,8 +46,10 @@ export const AuthProvider = ({ children }) => {
     if (token) {
       try {
         const decoded = decodeJWT();
+        console.log("Decoded JWT en useEffect:", decoded); // Depurar el JWT al cargar
         setUser(decoded);
       } catch (error) {
+        console.error("Error decodificando token:", error);
         localStorage.removeItem('token');
         setUser(null);
       }

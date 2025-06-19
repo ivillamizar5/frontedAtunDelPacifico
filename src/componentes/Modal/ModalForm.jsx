@@ -5,7 +5,7 @@ export const ModalForm = ({ id, Componente }) => {
     <div
       className="modal fade"
       id={id}
-      tabIndex={-1}
+      tabIndex="-1"
       aria-labelledby="exampleModalLabel"
       aria-hidden="true"
     >

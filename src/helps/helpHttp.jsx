@@ -66,9 +66,15 @@ export const helpHttp = () => {
     return customFetch(url, options);
   };
 
+    const patch = (url, options = {}) => {
+    options.method = "PATCH";
+    return customFetch(url, options);
+  };
+
   return {
     get,
     post,
+    patch,
     put,
     del,
   };

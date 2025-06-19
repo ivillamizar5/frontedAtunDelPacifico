@@ -2,10 +2,12 @@ import React, { useContext } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { AuthContext } from "./AuthContext";
 
-
 export const NavBar = () => {
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
+
+  // Depurar el objeto user para inspeccionar el rol
+  console.log("User en NavBar:", user);
 
   const handleLogout = () => {
     logout();
@@ -16,7 +18,8 @@ export const NavBar = () => {
     return null; // No renderizar el NavBar si no hay usuario autenticado
   }
 
-  const rol = user.rol || user.sub; // Ajustar según el campo que uses
+  // Usar user.role directamente y normalizar a minúsculas para evitar problemas de case-sensitivity
+  const rol = user.role ? user.role.toLowerCase() : "";
 
   return (
     <nav className="navbar navbar-expand-lg bg-white shadow-sm">
@@ -45,7 +48,7 @@ export const NavBar = () => {
           id="navbarNav"
         >
           <ul className="navbar-nav gap-3">
-            {rol === "admin" && (
+            {rol === "administrador" && (
               <>
                 <li className="nav-item">
                   <NavLink
@@ -141,14 +144,14 @@ export const NavBar = () => {
                 </li>
                 <li className="nav-item">
                   <NavLink
-                    to="/cliente/perfil"
+                    to="/cliente/listaproductos"
                     className={({ isActive }) =>
                       isActive
                         ? "nav-link text-dark border-bottom border-3 border-dark"
                         : "nav-link text-secondary"
                     }
                   >
-                    Mi Perfil
+                    Lista Productos
                   </NavLink>
                 </li>
               </>
