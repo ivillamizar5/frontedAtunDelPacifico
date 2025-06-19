@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 const initialForm = {
-  id:null,
+  id: null,
   codigo_lote: "",
   fecha_produccion: "",
   producto_id: "",
@@ -11,7 +11,6 @@ const initialForm = {
 
 export const FromProductoLote = ({
   createData,
-  //updateData,
   dataToEdit,
   setdataToEdit,
 }) => {
@@ -26,14 +25,14 @@ export const FromProductoLote = ({
 
   useEffect(() => {
     if (dataToEdit) {
-      console.log("Editar")
+      console.log("Editar", dataToEdit);
       setform({
-      id: dataToEdit.id,
-      codigo_lote: dataToEdit.codigoLote,
-      fecha_produccion: dataToEdit.fechaProduccion,
-      producto_id: dataToEdit.producto.id,
-      cantidad: dataToEdit.cantidad,
-      estado: dataToEdit.estado,
+        id: dataToEdit.id,
+        codigo_lote: dataToEdit.codigoLote,
+        fecha_produccion: dataToEdit.fechaProduccion,
+        producto_id: dataToEdit.producto.id,
+        cantidad: dataToEdit.cantidad,
+        estado: dataToEdit.estado,
       });
     } else {
       setform(initialForm);
@@ -42,87 +41,95 @@ export const FromProductoLote = ({
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log(form)
+    console.log("Formulario actual:", form);
+
+    // Validaciones
     if (!form.codigo_lote) {
-      console.log(form.codigo_lote);
-      alert("Datos incompletos codigo_lote");
+      alert("Datos incompletos: código de lote");
       return;
     }
-
     if (!form.fecha_produccion) {
-      console.log(!form.fecha_produccion);
-      alert("Datos incompletos fecha_produccion");
+      alert("Datos incompletos: fecha de producción");
       return;
     }
-
     if (!form.producto_id) {
-      console.log(!form.producto_id);
-      alert("Datos incompletos producto_id");
+      alert("Datos incompletos: tipo de producto");
       return;
     }
-
     if (!form.cantidad) {
-      console.log(!form.cantidad);
-      alert("Datos incompletos");
+      alert("Datos incompletos: cantidad");
       return;
     }
     if (!form.estado) {
-      console.log(!form.estado);
-      alert("Datos incompletos ",form.estado);
+      alert("Datos incompletos: estado");
       return;
     }
 
-    // validamos si id es null creamos, si id trae el id actualizamos
-    if (form.id === null) {
-      createData(form);
-      console.log("creado", form);
-    } else {
-     // updateData(form);
+    // Transformar el form al formato esperado por el backend
+    const formattedData = {
+      codigoLote: form.codigo_lote,
+      fechaProduccion: form.fecha_produccion,
+      producto: {
+        id: parseInt(form.producto_id), // Convertir a número
+      },
+      cantidad: parseInt(form.cantidad), // Convertir a número
+      estado: form.estado,
+    };
+
+    // Incluir id solo si existe (para edición)
+    if (form.id !== null) {
+      formattedData.id = form.id;
     }
+
+    console.log("Datos enviados:", formattedData);
+
+    // Enviar datos
+    if (form.id === null) {
+      createData(formattedData);
+    } else {
+      console.log("actualizar--")
+      // updateData(formattedData); // Descomentar si implementas updateData
+    }
+
     handleReset();
   };
 
-  const handleReset = (e) => {
+  const handleReset = () => {
     setform(initialForm);
     setdataToEdit(null);
   };
-  
 
   return (
     <>
-
-
       <form onSubmit={handleSubmit}>
         <div className="row">
           <div className="col-md-6">
             <div className="mb-3">
-              <>
-                <label htmlFor="codigo_lote" className="form-label">
-                  Código de Lote
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="codigo_lote"
-                  placeholder="Ej: L005"
-                  required
-                  value={form.codigo_lote}
-                  name="codigo_lote"
-                  onChange={handleChange}
-                />
-                <label htmlFor="fecha_produccion" className="form-label">
-                  Fecha de Producción
-                </label>
-                <input
-                  type="date"
-                  className="form-control"
-                  id="fecha_produccion"
-                  required
-                  value={form.fecha_produccion}
-                  name="fecha_produccion"
-                  onChange={handleChange}
-                />
-              </>
+              <label htmlFor="codigo_lote" className="form-label">
+                Código de Lote
+              </label>
+              <input
+                type="text"
+                className="form-control"
+                id="codigo_lote"
+                placeholder="Ej: L005"
+                required
+                value={form.codigo_lote}
+                name="codigo_lote"
+                onChange={handleChange}
+              />
+              <label htmlFor="fecha_produccion" className="form-label">
+                Fecha de Producción
+              </label>
+              <input
+                type="date"
+                className="form-control"
+                id="fecha_produccion"
+                required
+                value={form.fecha_produccion}
+                name="fecha_produccion"
+                onChange={handleChange}
+              />
             </div>
             <div className="mb-3">
               <label htmlFor="producto_id" className="form-label">
@@ -143,20 +150,18 @@ export const FromProductoLote = ({
               </select>
             </div>
             <div className="mb-3">
-              <>
-                <label htmlFor="cantidad" className="form-label">
-                  Cantidad Producida
-                </label>
-                <input
-                  type="number"
-                  className="form-control"
-                  id="cantidad"
-                  required
-                  name="cantidad"
-                  value={form.cantidad}
-                  onChange={handleChange}
-                />
-              </>
+              <label htmlFor="cantidad" className="form-label">
+                Cantidad Producida
+              </label>
+              <input
+                type="number"
+                className="form-control"
+                id="cantidad"
+                required
+                name="cantidad"
+                value={form.cantidad}
+                onChange={handleChange}
+              />
             </div>
           </div>
 
