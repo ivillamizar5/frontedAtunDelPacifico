@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Table } from "../../componentes/Table";
 import { helpHttp } from "../../helps/helpHttp";
 import { FromProductoLote } from "../../componentes/FromProductoLote";
+import { Louder } from "../../componentes/Louder";
 
 export const AdminLotes = () => {
   const [db, setdb] = useState(null);
@@ -90,7 +91,7 @@ export const AdminLotes = () => {
     });
   };
 
-  const patchData = (id, data) => {
+  const patchData = (id) => {
     let endpoint = `${url}/${id}/defectuoso`;
     let options = {
       headers: { "content-type": "application/json" },
@@ -259,8 +260,13 @@ console.log( options, "opciones");
           </div>
         )}
 
+
+{/*  item.estado === "Disponible"
+      ? "text-bg-success"
+      : item.estado === "Vendido" */}
+
         {/* Tabla con datos filtrados */}
-        {db && (
+        {loading ? <Louder/> : db && (
           <Table
             deleteData={deleteData}
             data={filteredData}
@@ -287,7 +293,7 @@ console.log( options, "opciones");
             }
             renderRow={renderRow}
           />
-        )}
+        )} 
       </div>
     </>
   );

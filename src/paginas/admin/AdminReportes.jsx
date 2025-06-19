@@ -1,16 +1,18 @@
-import React, { useEffect, useState } from "react";
-
+import { useEffect, useState } from "react";
 import { helpHttp } from "../../helps/helpHttp";
+import { ProduccionCard } from "../../componentes/Cards/ProduccionCard";
 import { VentasCard } from "../../componentes/Cards/VentasCard";
 
 export const AdminReportes = () => {
   const [ventasPorTipo, setVentasPorTipo] = useState({});
   const [ventasPorCliente, setVentasPorCliente] = useState({});
+  const [produccionData, setProduccionData] = useState({});
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const urlVentasProducto = "http://localhost:8081/api/admin/reportes/ventas-producto";
   const urlVentasCliente = "http://localhost:8081/api/admin/reportes/ventas-cliente";
+  const urlProduccion = "http://localhost:8081/api/admin/reportes/produccion";
   let api = helpHttp();
 
   useEffect(() => {
@@ -34,7 +36,17 @@ export const AdminReportes = () => {
       }
     });
 
-    Promise.all([fetchVentasPorTipo, fetchVentasPorCliente]).then((results) => {
+    const fetchProduccion = api.get(urlProduccion).then((res) => {
+      if (!res.err) {
+        setProduccionData(res || {});
+        return { success: true };
+      } else {
+        setProduccionData({});
+        return { success: false, error: res };
+      }
+    });
+
+    Promise.all([fetchVentasPorTipo, fetchVentasPorCliente, fetchProduccion]).then((results) => {
       const hasError = results.some((result) => !result.success);
       if (hasError) {
         setError(results.find((result) => !result.success)?.error || { message: "Error desconocido" });
@@ -43,13 +55,13 @@ export const AdminReportes = () => {
       }
       setLoading(false);
     });
-  }, [urlVentasProducto, urlVentasCliente]);
+  }, [urlVentasProducto, urlVentasCliente, urlProduccion]);
 
   return (
     <>
       <div className="text-center mb-5 mt-3">
-        <h1 className="fw-bold">Reportes de Ventas</h1>
-        <p className="text-muted">Consulta las ventas por tipo de producto y cliente</p>
+        <h1 className="fw-bold">Reportes de Ventas y Producción</h1>
+        <p className="text-muted">Consulta las ventas por tipo de producto, cliente y reportes de producción</p>
       </div>
 
       <div className="container mt-3">
@@ -61,7 +73,7 @@ export const AdminReportes = () => {
         )}
         {!loading && (
           <div className="row">
-            <div className="col-md-6 mb-4">
+            <div className="col-md-4 mb-4">
               {Object.keys(ventasPorTipo).length > 0 ? (
                 <VentasCard
                   title="Ventas por Tipo de Producto"
@@ -73,7 +85,7 @@ export const AdminReportes = () => {
                 <div className="alert alert-warning">No hay datos de ventas por producto disponibles</div>
               )}
             </div>
-            <div className="col-md-6 mb-4">
+            <div className="col-md-4 mb-4">
               {Object.keys(ventasPorCliente).length > 0 ? (
                 <VentasCard
                   title="Ventas por Cliente"
@@ -83,6 +95,18 @@ export const AdminReportes = () => {
                 />
               ) : (
                 <div className="alert alert-warning">No hay datos de ventas por cliente disponibles</div>
+              )}
+            </div>
+            <div className="col-md-4 mb-4">
+              {Object.keys(produccionData).length > 0 ? (
+              <VentasCard
+              title="Reportes de Producción"
+              data={produccionData}
+              headerBgColor="bg-secondary"
+              badgeBgColor="bg-info"
+            />
+              ) : (
+                <div className="alert alert-warning">No hay datos de producción disponibles</div>
               )}
             </div>
           </div>

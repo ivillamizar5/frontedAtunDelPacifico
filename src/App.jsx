@@ -12,13 +12,16 @@ import { Error404 } from './componentes/Error404';
 import { RutaPublica } from './componentes/RutaPublica';
 import { AdminReportes } from './paginas/admin/AdminReportes';
 import { ListaProductos } from './paginas/cliente/ConsultarPedidos';
+import Footer from './componentes/Footer';
 // import { OperadorPedidos } from './paginas/operador/OperadorPedidos';
 // import { OperadorDashboard } from './paginas/operador/OperadorDashboard';
 // import { ClienteHome } from './paginas/cliente/ClienteHome';
 
 function App() {
   return (
-    <BrowserRouter>
+<>
+
+<BrowserRouter>
       <AuthProvider>
         <NavBar />
         <Routes>
@@ -60,7 +63,13 @@ function App() {
           <Route path="*" element={<Error404 />} />
         </Routes>
       </AuthProvider>
+      <Footer/>
     </BrowserRouter>
+
+    
+
+</>
+    
   );
 }
 

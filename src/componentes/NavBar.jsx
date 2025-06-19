@@ -25,11 +25,11 @@ export const NavBar = () => {
     <nav className="navbar navbar-expand-lg bg-white shadow-sm">
       <div className="container">
         <a
-          className="navbar-brand fw-bold text-black d-flex align-items-center gap-2"
+          className="navbar-brand fw-bold text-black d-flex align-items-center gap-2 fs-6"
           href="#"
         >
-          <i className="fas fa-fish"></i>
-          BlueBrand
+          <i className="fas fa-fish "></i>
+          ATUNPACIFICO
         </a>
         <button
           className="navbar-toggler"
