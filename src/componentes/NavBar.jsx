@@ -48,7 +48,7 @@ export const NavBar = () => {
           id="navbarNav"
         >
           <ul className="navbar-nav gap-3">
-            {rol === "administrador" && (
+            {rol === "role_administrador" && (
               <>
                 <li className="nav-item">
                   <NavLink
@@ -100,7 +100,7 @@ export const NavBar = () => {
                 </li>
               </>
             )}
-            {rol === "operador" && (
+            {rol === "role_operador" && (
               <>
                 <li className="nav-item">
                   <NavLink
@@ -128,7 +128,7 @@ export const NavBar = () => {
                 </li>
               </>
             )}
-            {rol === "cliente" && (
+            {rol === "role_cliente" && (
               <>
                 <li className="nav-item">
                   <NavLink

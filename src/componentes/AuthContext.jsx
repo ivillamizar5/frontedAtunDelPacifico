@@ -9,30 +9,31 @@ export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
 
   // Función para iniciar sesión
-  const login = (token) => {
-    localStorage.setItem('token', JSON.stringify(token)); // Almacenar como JSON
-    const decoded = decodeJWT(); // Obtener el payload completo
-    console.log("Decoded JWT:", decoded); // Depurar el JWT decodificado
-    setUser(decoded); // Almacenar el payload como user
+const login = (token) => {
+  console.log("Token recibido en login:", token);
+  localStorage.setItem('token', token);
+  const decoded = decodeJWT();
+  console.log("Decoded JWT:", decoded);
+  setUser(decoded);
 
-    // Redirigir según el rol (normalizar a minúsculas)
-    const rol = decoded.role ? decoded.role.toLowerCase() : "";
-    switch (rol) {
-      case 'administrador':
-        navigate('/admin/produccion');
-        break;
-      case 'operador':
-        navigate('/operador/dashboard');
-        break;
-      case 'cliente':
-        console.log("Navegando a cliente/home");
-        navigate('/cliente/home');
-        break;
-      default:
-        navigate('/');
-    }
-  };
-
+  const rol = decoded.role ? decoded.role.toLowerCase() : "";
+  console.log(rol, "Rol del usuario decodificado");
+  switch (rol) {
+    case 'role_administrador':
+      console.log("Navegando a admin/produccion");
+      navigate('/admin/produccion');
+      break;
+    case 'operador':
+      navigate('/operador/dashboard');
+      break;
+    case 'cliente':
+      console.log("Navegando a cliente/home");
+      navigate('/cliente/home');
+      break;
+    default:
+      navigate('/');
+  }
+};
   // Función para cerrar sesión
   const logout = () => {
     localStorage.removeItem('token');

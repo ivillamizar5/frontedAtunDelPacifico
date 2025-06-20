@@ -20,7 +20,7 @@ export const Registrarse = () => {
   const [db, setdb] = useState(null);
   const [dataToEdit, setdataToEdit] = useState(null);
   const [error, seterror] = useState(null);
-  const [loading, setloading] = useState(true);
+  const [correcto, setcorrecto] = useState(null);
 
   const [form, setform] = useState(initialForm);
 
@@ -38,19 +38,23 @@ export const Registrarse = () => {
       if (!res.err) {
         // Si la respuesta no tiene error, procesamos la respuesta
         console.log("Respuesta recibida:", res);
+        setcorrecto(res);  // Indicamos que el registro fue exitoso
         setdb(res); // Asumimos que esto actualiza tu base de datos o estado
+        console.log("Datos guardados correctamente:", correcto);
       } else {
         // Si la respuesta tiene error, procesamos el error
         console.log("Error:", res.body);  // Aquí mostramos el cuerpo del mensaje de error
         seterror(res.body);  // Almacenamos el mensaje de error en el estado
-        setTimeout(() => {
-          seterror(null);
-        }, 3000);
       }
     })
     .catch((err) => {
       console.log("Error inesperado:", err);
     });
+
+    setTimeout(() => {
+      seterror(null);
+      setcorrecto(null);
+    }, 3000);
   };
  
 
@@ -64,6 +68,8 @@ export const Registrarse = () => {
         Complete el formulario para crear una cuenta.
       </p>
        {error && <Message msg={error} />} 
+       {correcto && <Message msg={correcto} bgColor="alert-success" />}
+
         <FormRegistro createData={createData} setdataToEdit={setdataToEdit} dataToEdit={dataToEdit}/>
         </div>
       </div>

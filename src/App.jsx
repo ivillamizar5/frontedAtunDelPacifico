@@ -34,7 +34,7 @@ function App() {
           {/* Rutas de Admin */}
           <Route
             path="/admin"
-            element={<RutaProtegida rolesPermitidos={['administrador']} />}
+            element={<RutaProtegida rolesPermitidos={['role_administrador']} />}
           >
             <Route path="produccion" element={<AdminLotes />} />
             <Route path="clientes" element={<AdminClientes />} />
@@ -45,7 +45,7 @@ function App() {
           {/* Rutas de Operador */}
           <Route
             path="/operador"
-            element={<RutaProtegida rolesPermitidos={['operador']} />}
+            element={<RutaProtegida rolesPermitidos={['role_operador']} />}
           >
             <Route path="pedidos" element={<h1>Operador</h1>} />
             <Route path="dashboard" element={<h1>Dashboard</h1>} />
@@ -54,7 +54,7 @@ function App() {
           {/* Rutas de Cliente */}
           <Route
             path="/cliente"
-            element={<RutaProtegida rolesPermitidos={['cliente']} />}
+            element={<RutaProtegida rolesPermitidos={['role_cliente']} />}
           >
             <Route path="home" element={<h1>Home</h1>} />
             <Route path="listaproductos" element={<ListaProductos />} />

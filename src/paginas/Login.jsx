@@ -32,26 +32,28 @@ export const Login = () => {
   let url = "http://localhost:8081/api/auth/login";
   const api = helpHttp();
 
-  const datosLogin = (data) => {
-    let options = {
-      body: data,
-      headers: { "content-type": "application/json" },
-    };
-    setLoading(true);
-    api.post(url, options).then((res) => {
-      if (!res.err) {
-        login(res.token); // Usar la función login del contexto
-      
-      } else {
-        console.log("Error en el login", res);
-        setMsg(res);
-        setTimeout(() => {
-          setMsg(null);
-        }, 3000);
-      }
-      setLoading(false);
-    });
+const datosLogin = (data) => {
+  let options = {
+    body: data,
+    headers: { "content-type": "application/json" },
   };
+  setLoading(true);
+  api.post(url, options).then((res) => {
+    console.log("Respuesta cruda del servidor:", res);
+    if (!res.err) {
+      const token = typeof res === 'string' ? res : res.token;
+      console.log("Token extraído:", token);
+      login(token);
+    } else {
+      console.log("Error en el login", res);
+      setMsg(res);
+      setTimeout(() => {
+        setMsg(null);
+      }, 3000);
+    }
+    setLoading(false);
+  });
+};
 
   return (
     <div className="d-flex justify-content-center align-items-center vh-100 bg-light">

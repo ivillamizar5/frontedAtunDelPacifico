@@ -1,64 +1,48 @@
 export const helpHttp = () => {
-  const customFetch = (endpoint, options) => {
-    const defaultHeader = {
-      accept: "application/json",
+const customFetch = async (endpoint, options) => {
+  const defaultHeader = {
+    accept: "application/json",
+  };
+
+  const token = localStorage.getItem("token");
+
+  const controller = new AbortController();
+  options.signal = controller.signal;
+
+  options.method = options.method || "GET";
+  options.headers = options.headers
+    ? { ...defaultHeader, ...options.headers }
+    : defaultHeader;
+
+  if (token && !options.headers?.Authorization) {
+    options.headers = {
+      ...options.headers,
+      Authorization: `Bearer ${token}`,
     };
+  }
 
-    // Obtener el token de localStorage
-    const tokenRaw = localStorage.getItem("token");
-    let token = null;
-    if (tokenRaw) {
-      try {
-        token = JSON.parse(tokenRaw); // Parsear el token almacenado como JSON
-      } catch (error) {
-        console.error("Error al parsear el token:", error);
-      }
-    }
+  options.body = JSON.stringify(options.body) || false;
+  if (!options.body) delete options.body;
 
-    const controller = new AbortController();
-    options.signal = controller.signal;
+  setTimeout(() => controller.abort(), 2000);
 
-    options.method = options.method || "GET";
-    options.headers = options.headers
-      ? { ...defaultHeader, ...options.headers }
-      : defaultHeader;
-
-    // Añadir el token al encabezado Authorization si existe
-    if (token && !options.headers?.Authorization) {
-      options.headers = {
-        ...options.headers,
-        Authorization: `Bearer ${token}`,
-      };
-    }
-
-    options.body = JSON.stringify(options.body) || false;
-    if (!options.body) delete options.body;
-
-    setTimeout(() => controller.abort(), 2000);
-
-    return fetch(endpoint, options)
-    .then((res) => {
-      // Verificamos si la respuesta es exitosa
+  return fetch(endpoint, options)
+    .then(async (res) => {
       if (!res.ok) {
-        // Si no es exitosa, manejamos el error de una manera adecuada.
-        return res.text().then((text) => {
-          // Aquí estamos manejando el texto plano, en lugar de JSON
-          return Promise.reject({
-            err: true,
-            status: res.status || "00",
-            statusText: res.statusText || "Ocurrió un error",
-            body: text, // Esto nos dará el texto completo de la respuesta de error
-          });
+        const text = await res.text();
+        return await Promise.reject({
+          err: true,
+          status: res.status || "00",
+          statusText: res.statusText || "Ocurrió un error",
+          body: text,
         });
       }
-      // Si la respuesta es exitosa, procesamos como JSON (o texto si fuera necesario)
-      return res.text(); // Aquí cambiamos a `.text()` porque esperamos un mensaje en texto plano
+      return res.json();
     })
     .catch((err) => {
-      // Si ocurre un error, lo manejamos aquí
       return err;
     });
-  };
+};
 
   const get = (url, options = {}) => customFetch(url, options);
 

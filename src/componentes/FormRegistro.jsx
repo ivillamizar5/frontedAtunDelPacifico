@@ -124,13 +124,16 @@ export const FormRegistro = ({
 
     // Enviar datos
     if (form.id === null) {
-      console.log(form)
+      console.log(form, " creando nuevo registro");
       createData(form);
+      handleReset();
     } else {
+      console.log(form, " actualizando registro");
       updateData(form);
+      handleReset();
     }
 
-    handleReset();
+    
   };
 
   const handleReset = () => {

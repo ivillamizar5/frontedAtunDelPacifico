@@ -1,7 +1,7 @@
-export const Message = ({ msg, bgColor = "bg-danger", color = "text-white" }) => {
+export const Message = ({ msg, bgColor = "alert-danger" }) => {
     console.log("mensaje 2 ", msg)
     return (
-        <div className={`alert ${bgColor} ${color} text-center fw-semibold`}>
+        <div className={`alert ${bgColor} text-center fw-semibold`} role="alert">
         {msg}
         </div>
     );
