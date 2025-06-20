@@ -11,6 +11,8 @@ const initialForm = {
   telefono: "",
   password: "",
   confirmPassword: "",
+  username:"pruebaS",
+  rolId:3
 };
 
 export const FormRegistro = ({
@@ -122,9 +124,10 @@ export const FormRegistro = ({
 
     // Enviar datos
     if (form.id === null) {
-      createData(formattedData);
+      console.log(form)
+      createData(form);
     } else {
-      updateData(formattedData);
+      updateData(form);
     }
 
     handleReset();
@@ -246,6 +249,24 @@ export const FormRegistro = ({
                   value={form.confirmPassword}
                   onChange={handleChange}
                   name="confirmPassword"
+                />
+              </div>
+
+              <div className="mb-4">
+                <label
+                  htmlFor={`${idPrefix}confirmPassword`}
+                  className="form-label fw-semibold"
+                >
+                  Nombre de usuario
+                </label>
+                <input
+                  type="text"
+                  className="form-control"
+                  id="username"
+                  placeholder="********"
+                  value={form.username}
+                  onChange={handleChange}
+                  name="username"
                 />
               </div>
             </>

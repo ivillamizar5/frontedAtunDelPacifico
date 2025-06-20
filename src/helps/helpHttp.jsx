@@ -37,16 +37,27 @@ export const helpHttp = () => {
     setTimeout(() => controller.abort(), 2000);
 
     return fetch(endpoint, options)
-      .then((res) =>
-        res.ok
-          ? res.json()
-          : Promise.reject({
-              err: true,
-              status: res.status || "00",
-              statusText: res.statusText || "Ocurrió un error",
-            })
-      )
-      .catch((err) => err);
+    .then((res) => {
+      // Verificamos si la respuesta es exitosa
+      if (!res.ok) {
+        // Si no es exitosa, manejamos el error de una manera adecuada.
+        return res.text().then((text) => {
+          // Aquí estamos manejando el texto plano, en lugar de JSON
+          return Promise.reject({
+            err: true,
+            status: res.status || "00",
+            statusText: res.statusText || "Ocurrió un error",
+            body: text, // Esto nos dará el texto completo de la respuesta de error
+          });
+        });
+      }
+      // Si la respuesta es exitosa, procesamos como JSON (o texto si fuera necesario)
+      return res.text(); // Aquí cambiamos a `.text()` porque esperamos un mensaje en texto plano
+    })
+    .catch((err) => {
+      // Si ocurre un error, lo manejamos aquí
+      return err;
+    });
   };
 
   const get = (url, options = {}) => customFetch(url, options);

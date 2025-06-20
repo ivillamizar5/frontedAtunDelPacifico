@@ -1,5 +1,7 @@
 import React, { useState } from 'react'
 import { FormRegistro } from '../componentes/FormRegistro'
+import { helpHttp } from '../helps/helpHttp';
+import { Message } from '../componentes/Message';
 
 const initialForm = {
   correo: "",
@@ -15,51 +17,42 @@ const initialForm = {
 
 export const Registrarse = () => {
 
+  const [db, setdb] = useState(null);
+  const [dataToEdit, setdataToEdit] = useState(null);
+  const [error, seterror] = useState(null);
+  const [loading, setloading] = useState(true);
+
   const [form, setform] = useState(initialForm);
 
 
-  const handleChange = (e) => {
-    setform({
-      ...form,
-      [e.target.name]: e.target.value,
+  let api = helpHttp();
+  let url = "http://localhost:8081/api/auth/register";
+
+  const createData = (data) => {
+    let options = {
+      body: data,
+      headers: { "content-type": "application/json" },
+    };
+    api.post(url, options)
+    .then((res) => {
+      if (!res.err) {
+        // Si la respuesta no tiene error, procesamos la respuesta
+        console.log("Respuesta recibida:", res);
+        setdb(res); // Asumimos que esto actualiza tu base de datos o estado
+      } else {
+        // Si la respuesta tiene error, procesamos el error
+        console.log("Error:", res.body);  // Aquí mostramos el cuerpo del mensaje de error
+        seterror(res.body);  // Almacenamos el mensaje de error en el estado
+        setTimeout(() => {
+          seterror(null);
+        }, 3000);
+      }
+    })
+    .catch((err) => {
+      console.log("Error inesperado:", err);
     });
   };
-
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log("Formulario actual:", form);
-
-    // Validaciones
-    if (!form.correo) {
-      alert("Datos incompletos: correo");
-      return;
-    }
-    if (!form.direccion) {
-      alert("Datos incompletos: direccion");
-      return;
-    }
-    if (!form.estado) {
-      alert("Datos incompletos: estado");
-      return;
-    }
-    if (!form.identificacion) {
-      alert("Datos incompletos: identificacion");
-      return;
-    }
-    if (!form.nombre) {
-      alert("Datos incompletos: nombre");
-      return;
-    }
-
-    if (!form.telefono) {
-      alert("Datos incompletos: telefono");
-      return;
-    }
-
-    setform(initialForm);
-
-}
+ 
 
   return (
 <div className="d-flex justify-content-center align-items-center vh-100 bg-light">
@@ -70,7 +63,8 @@ export const Registrarse = () => {
       <p className="text-center text-muted mb-4">
         Complete el formulario para crear una cuenta.
       </p>
-        <FormRegistro/>
+       {error && <Message msg={error} />} 
+        <FormRegistro createData={createData} setdataToEdit={setdataToEdit} dataToEdit={dataToEdit}/>
         </div>
       </div>
     </div>
