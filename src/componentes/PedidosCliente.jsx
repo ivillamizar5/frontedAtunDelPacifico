@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { ModalClintePedido } from "./Modal/ModalDetallePedido";
 
 export const ProductoCard = ({ producto }) => {
- 
 
   const precioTotal = producto.precio * cantidad;
   const modalId = `modal-${producto.id}`;

@@ -108,7 +108,7 @@ export const FormRegistro = ({
     };
 
     if (form.id !== null) {
-      formattedData.id = form.id;
+      formattedData.id = form.rolId;
     }
 
     if (pathName === "/registro" || (isModal && form.password)) {
