@@ -1,78 +1,198 @@
-import React, { useState } from 'react'
-import { FormRegistro } from '../componentes/FormRegistro'
-import { helpHttp } from '../helps/helpHttp';
-import { Message } from '../componentes/Message';
+import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 
-const initialForm = {
-  correo: "",
-  direccion: "",
-  estado: "",
-  id: null,
-  password:"",
-  identificacion: "",
-  nombre: "",
-  telefono: "",
-};
+export const FormRegistro = ({ createData, setdataToEdit, dataToEdit }) => {
+  const location = useLocation();
+  // Verify if the current path is exactly '/registrar'
+  const isRegistrarRoute = location.pathname === '/registrar';
+  // Verify if the current path is '/admin/clientes'
+  const isAdminClientesRoute = location.pathname === '/admin/clientes';
 
-
-export const Registrarse = () => {
-
-  const [db, setdb] = useState(null);
-  const [dataToEdit, setdataToEdit] = useState(null);
-  const [error, seterror] = useState(null);
-  const [correcto, setcorrecto] = useState(null);
-
-  const [form, setform] = useState(initialForm);
-
-
-  let api = helpHttp();
-  let url = "http://localhost:8081/api/auth/register";
-
-  const createData = (data) => {
-    let options = {
-      body: data,
-      headers: { "content-type": "application/json" },
-    };
-    api.post(url, options)
-    .then((res) => {
-      if (!res.err) {
-        // Si la respuesta no tiene error, procesamos la respuesta
-        console.log("Respuesta recibida:", res);
-        setcorrecto(res);  // Indicamos que el registro fue exitoso
-        setdb(res); // Asumimos que esto actualiza tu base de datos o estado
-        console.log("Datos guardados correctamente:", correcto);
-      } else {
-        // Si la respuesta tiene error, procesamos el error
-        console.log("Error:", res.body);  // Aquí mostramos el cuerpo del mensaje de error
-        seterror(res.body);  // Almacenamos el mensaje de error en el estado
-      }
-    })
-    .catch((err) => {
-      console.log("Error inesperado:", err);
-    });
-
-    setTimeout(() => {
-      seterror(null);
-      setcorrecto(null);
-    }, 3000);
+  const initialForm = {
+    correo: '',
+    direccion: '',
+    identificacion: '',
+    username: '',
+    telefono: '',
+    password: '',
+    rolId: 3, // Default to Cliente
   };
- 
+
+  const [form, setForm] = useState(initialForm);
+
+  useEffect(() => {
+    if (dataToEdit) {
+      setForm(dataToEdit);
+    } else {
+      setForm(initialForm);
+    }
+  }, [dataToEdit]);
+
+  const handleChange = (e) => {
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleRoleChange = (e) => {
+    const newRolId = parseInt(e.target.value);
+    setForm({
+      ...form,
+      rolId: newRolId,
+      ...(newRolId === 2 ? { direccion: '', identificacion: '', telefono: '' } : {}),
+    });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    const requiredFields = ['username', 'password', 'correo'];
+    if (form.rolId === 3) {
+      requiredFields.push('direccion', 'identificacion', 'telefono');
+    }
+
+    const missingFields = requiredFields.filter((field) => !form[field]);
+    if (missingFields.length > 0) {
+      alert(`Por favor, complete los siguientes campos: ${missingFields.join(', ')}`);
+      return;
+    }
+
+    createData(form);
+    setForm(initialForm);
+  };
+
+  const idPrefix = 'form-registro-';
 
   return (
-<div className="d-flex justify-content-center align-items-center vh-100 bg-light">
-      <div className="p-4  rounded bg-white">
+    <div data-form="registro-debug">
+      <form onSubmit={handleSubmit} className="p-6 max-w-md mx-auto bg-white rounded-lg shadow-md">
+        {isAdminClientesRoute && (
+          <div className="mb-4">
+            <label htmlFor={`${idPrefix}rolId`} className="block text-sm font-medium text-gray-700 mb-1">
+              Rol
+            </label>
+            <select
+              id={`${idPrefix}rolId`}
+              name="rolId"
+              value={form.rolId}
+              onChange={handleRoleChange}
+              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            >
+              <option value={3}>Cliente</option>
+              <option value={2}>Operador</option>
+            </select>
+          </div>
+        )}
 
-        <div className="container  rounded">
-      <h2 className="text-center fw-bold mb-3">Registrarse</h2>
-      <p className="text-center text-muted mb-4">
-        Complete el formulario para crear una cuenta.
-      </p>
-       {error && <Message msg={error} />} 
-       {correcto && <Message msg={correcto} bgColor="alert-success" />}
-
-        <FormRegistro createData={createData} setdataToEdit={setdataToEdit} dataToEdit={dataToEdit}/>
+        <div className="mb-4">
+          <label htmlFor={`${idPrefix}username`} className="block text-sm font-medium text-gray-700 mb-1">
+            Nombre de usuario
+          </label>
+          <input
+            type="text"
+            id={`${idPrefix}username`}
+            name="username"
+            value={form.username}
+            onChange={handleChange}
+            autoComplete="username"
+            className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
         </div>
-      </div>
+
+        <div className="mb-4">
+          <label htmlFor={`${idPrefix}correo`} className="block text-sm font-medium text-gray-700 mb-1">
+            Correo electrónico
+          </label>
+          <input
+            type="email"
+            id={`${idPrefix}correo`}
+            name="correo"
+            value={form.correo}
+            onChange={handleChange}
+            autoComplete="email"
+            className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+        </div>
+
+        <div className="mb-4">
+          <label htmlFor={`${idPrefix}password`} className="block text-sm font-medium text-gray-700 mb-1">
+            Contraseña
+          </label>
+          <input
+            type="password"
+            id={`${idPrefix}password`}
+            name="password"
+            value={form.password}
+            onChange={handleChange}
+            autoComplete="new-password"
+            className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+        </div>
+
+        {form.rolId === 3 && (
+          <>
+            <div className="mb-4">
+              <label htmlFor={`${idPrefix}identificacion`} className="block text-sm font-medium text-gray-700 mb-1">
+                Identificación
+              </label>
+              <input
+                type="text"
+                id={`${idPrefix}identificacion`}
+                name="identificacion"
+                value={form.identificacion}
+                onChange={handleChange}
+                autoComplete="off"
+                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+
+            <div className="mb-4">
+              <label htmlFor={`${idPrefix}telefono`} className="block text-sm font-medium text-gray-700 mb-1">
+                Teléfono
+              </label>
+              <input
+                type="text"
+                id={`${idPrefix}telefono`}
+                name="telefono"
+                value={form.telefono}
+                onChange={handleChange}
+                autoComplete="tel"
+                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+
+            <div className="mb-4">
+              <label htmlFor={`${idPrefix}direccion`} className="block text-sm font-medium text-gray-700 mb-1">
+                Dirección
+              </label>
+              <input
+                type="text"
+                id={`${idPrefix}direccion`}
+                name="direccion"
+                value={form.direccion}
+                onChange={handleChange}
+                autoComplete="street-address"
+                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+          </>
+        )}
+
+        <button
+          type="submit"
+          className="w-full bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700 transition-colors"
+        >
+          Registrarse
+        </button>
+      </form>
     </div>
-  )
-}
+  );
+};
