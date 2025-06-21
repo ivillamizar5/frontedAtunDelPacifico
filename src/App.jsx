@@ -63,7 +63,7 @@ function App() {
           <Route path="*" element={<Error404 />} />
         </Routes>
       </AuthProvider>
-      <Footer/>
+      {/* <Footer/> */}
     </BrowserRouter>
 
     
