@@ -1,81 +1,112 @@
-import React, { useEffect, useState } from "react";
+// AdminClientes.jsx
+import React, { useContext, useEffect, useState } from "react";
 import { Table } from "../../componentes/Table";
 import { FormRegistro } from "../../componentes/FormRegistro";
 import { helpHttp } from "../../helps/helpHttp";
+import { Message } from "../../componentes/Message";
+import { HistorialModal } from "../../componentes/Modal/HistorialModal";
+import { AuthContext } from "../../componentes/AuthContext";
 
 export const AdminClientes = () => {
-  const [db, setdb] = useState(null);
-  const [dataToEdit, setdataToEdit] = useState(null);
-  const [error, seterror] = useState(null);
-  const [loading, setloading] = useState(true);
+  const { user } = useContext(AuthContext);
+  const [db, setDb] = useState(null);
+  const [dataToEdit, setDataToEdit] = useState(null);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [successMessage, setSuccessMessage] = useState(null);
+  const [showForm, setShowForm] = useState(false);
 
-  let api = helpHttp();
-  let url = "http://localhost:8081/api/admin/clientes";
+  const api = helpHttp();
+  const url = "http://localhost:8081/api/admin/clientes";
 
-  useEffect(() => {
+  // 🔁 Esta función centraliza la carga de los clientes
+  const fetchClientes = () => {
+    setLoading(true);
     api.get(url).then((res) => {
       if (!res.err) {
-        console.log(res);
-        setdb(res);
-        seterror(null);
+        setDb(res);
+        setError(null);
       } else {
-        setdb(null);
-        seterror(res);
+        setDb(null);
+        setError(res);
       }
-      setloading(false);
+      setLoading(false);
     });
-  }, [url]);
+  };
 
+  useEffect(() => {
+    fetchClientes();
+  }, []);
 
   const createData = (data) => {
-    let options = {
+    api.post(url, {
       body: data,
       headers: { "content-type": "application/json" },
-    };
-
-    api.post(url, options).then((res) => {
+    }).then((res) => {
       if (!res.err) {
-        setdb([...db, res]);
+        setSuccessMessage("Usuario creado exitosamente.");
+        fetchClientes();
+        setShowForm(false);
       } else {
-        seterror(res);
+        setError(res.body?.message || "Error al crear usuario.");
       }
+      setTimeout(() => {
+        setError(null);
+        setSuccessMessage(null);
+      }, 4000);
     });
   };
 
-  const updateData = (data) => {
-    let endpoint = `${url}/${data.id}`;
-    let options = {
-      body: data,
-      headers: { "content-type": "application/json" },
-    };
+const updateData = (data) => {
+  const id = data.id;
+  if (!id) {
+    setError("No se encontró el ID del usuario para actualizar.");
+    return;
+  }
 
-    api.put(endpoint, options).then((res) => {
-      if (!res.err) {
-        let newData = db.map((el) => (el.id === data.id ? res : el));
-        setdb(newData);
-      } else {
-        seterror(res);
-      }
-    });
+  const endpoint = `http://localhost:8081/api/auth/admin/usuarios/${id}`;
+  const options = {
+    body: data,
+    headers: { "Content-Type": "application/json" },
   };
+
+  api.patch(endpoint, options).then((res) => {
+    if (!res.err) {
+      setSuccessMessage("Usuario actualizado exitosamente.");
+      fetchClientes(); // 🔁 Volver a cargar los datos actualizados
+    } else {
+      const message =
+        typeof res.body === "string"
+          ? res.body
+          : res.body?.message || "Error desconocido al actualizar usuario.";
+      setError(message);
+    }
+
+    setTimeout(() => {
+      setError(null);
+      setSuccessMessage(null);
+    }, 4000);
+  });
+};
+
+
 
   const deleteData = (id) => {
-    let options = {
-      headers: { "content-type": "application/json" },
-    };
-
-    let isDelete = window.confirm(
-      `¿Estás seguro de eliminar el registro con el id ${id}?`
-    );
+    const isDelete = window.confirm(`¿Eliminar cliente con ID ${id}?`);
     if (isDelete) {
-      let endpoint = `${url}/${id}`;
-      api.del(endpoint, options).then((res) => {
+      api.del(`${url}/${id}`, {
+        headers: { "content-type": "application/json" },
+      }).then((res) => {
         if (!res.err) {
-          let newData = db.filter((el) => el.id !== id);
-          setdb(newData);
+          setSuccessMessage("Usuario eliminado.");
+          fetchClientes(); // Refrescar datos de clientes
         } else {
-          seterror(res);
+          setError(res.body?.message || "Error al eliminar usuario.");
         }
+        setTimeout(() => {
+          setError(null);
+          setSuccessMessage(null);
+        }, 4000);
       });
     }
   };
@@ -87,21 +118,25 @@ export const AdminClientes = () => {
       <td>{item.telefono}</td>
       <td>{item.direccion}</td>
       <td>
-        <span
-          className={`badge ${
-            item.estado === "Activo" ? "text-bg-success" : "text-bg-secondary"
-          }`}
-        >
+        <span className={`badge ${item.estado === "Activo" ? "text-bg-success" : "text-bg-secondary"}`}>
           {item.estado}
         </span>
       </td>
       <td>
         <button
+          type="button"
+          className="btn btn-info btn-sm"
+          data-bs-toggle="modal"
+          data-bs-target={`#historialModal-${item.id}`}
+        >
+          Ver Historial
+        </button>
+      </td>
+      <td>
+        <button
           onClick={() => {
-            setdataToEdit(item);
-            const modal = new window.bootstrap.Modal(
-              document.getElementById(modalId)
-            );
+            setDataToEdit(item);
+            const modal = new window.bootstrap.Modal(document.getElementById(modalId));
             modal.show();
           }}
           className="ms-3 mt-1 fas fa-edit border border-0 text-primary"
@@ -117,45 +152,80 @@ export const AdminClientes = () => {
   return (
     <>
       <div className="text-center mb-5 mt-3">
-        <h1 className="fw-bold">Gestión Usuarios</h1>
-        <p className="text-muted">Registrar, consultar</p>
+        <h1 className="fw-bold">Gestión de Clientes</h1>
+        <p className="text-muted">Administra los usuarios de Autunes del Pacífico</p>
       </div>
 
-      <div className="container mt-3">
-        <FormRegistro
-          createData={createData}
-          updateData={updateData}
-          dataToEdit={dataToEdit}
-          setdataToEdit={setdataToEdit}
-          isModal={false}
-        />
+      {loading && <p className="text-center">Cargando clientes...</p>}
+      {error && <Message msg={error} bgColor="alert-danger" />}
+      {successMessage && <Message msg={successMessage} bgColor="alert-success" />}
 
-        {db && (
-          <Table
-            deleteData={deleteData}
-            data={db}
-            nombreTabla={"Usuarios registrados"}
-            setdataToEdit={setdataToEdit}
-            tableHeader={[
-              "Nombre",
-              "Identificación",
-              "Teléfono",
-              "Dirección",
-              "Estado",
-              "Acción",
-            ]}
-            modalId="editClienteModal"
-            modalFormComponent={
+      <div className="container mt-3">
+        <div className="d-flex justify-content-end mb-3">
+          <button
+            className="btn btn-success"
+            onClick={() => {
+              setShowForm(!showForm);
+              setDataToEdit(null);
+            }}
+          >
+            {showForm ? "Ocultar Formulario" : "Registrar Nuevo Cliente"}
+          </button>
+        </div>
+
+        {showForm && (
+          <div className="card mb-4">
+            <div className="card-header">
+              <h3>{dataToEdit ? "Editar Cliente" : "Registrar Nuevo Cliente"}</h3>
+            </div>
+            <div className="card-body">
               <FormRegistro
                 createData={createData}
                 updateData={updateData}
                 dataToEdit={dataToEdit}
-                setdataToEdit={setdataToEdit}
-                isModal={true}
+                setDataToEdit={setDataToEdit}
+                isModal={false}
               />
-            }
-            renderRow={renderRow}
-          />
+            </div>
+          </div>
+        )}
+
+        {db && (
+          <>
+            {db.map((item) => (
+              <HistorialModal
+                key={item.id}
+                clienteId={item.id}
+                clienteNombre={item.nombre}
+              />
+            ))}
+            <Table
+              deleteData={deleteData}
+              data={db}
+              nombreTabla={"Clientes Registrados"}
+              setDataToEdit={setDataToEdit}
+              tableHeader={[
+                "Nombre",
+                "Identificación",
+                "Teléfono",
+                "Dirección",
+                "Estado",
+                "Historial",
+                "Acción",
+              ]}
+              modalId="editClienteModal"
+              modalFormComponent={
+                <FormRegistro
+                  createData={createData}
+                  updateData={updateData}
+                  dataToEdit={dataToEdit}
+                  setDataToEdit={setDataToEdit}
+                  isModal={true}
+                />
+              }
+              renderRow={renderRow}
+            />
+          </>
         )}
       </div>
     </>

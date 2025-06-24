@@ -11,8 +11,12 @@ import { AdminPedidos } from './paginas/admin/AdminPedidos';
 import { Error404 } from './componentes/Error404';
 import { RutaPublica } from './componentes/RutaPublica';
 import { AdminReportes } from './paginas/admin/AdminReportes';
-import { ListaProductos } from './paginas/cliente/ConsultarPedidos';
+import "../public/style.css"; // Importar estilos globales
 import Footer from './componentes/Footer';
+import { Productos } from './componentes/Productos';
+import { ListaProductos } from './paginas/cliente/ListaProductos';
+import { ConsultarProductos } from './paginas/cliente/ConsultarPedidos';
+import { AdminOperadores } from './paginas/admin/AdminOperadores';
 // import { OperadorPedidos } from './paginas/operador/OperadorPedidos';
 // import { OperadorDashboard } from './paginas/operador/OperadorDashboard';
 // import { ClienteHome } from './paginas/cliente/ClienteHome';
@@ -35,7 +39,9 @@ function App() {
           <Route
             path="/admin"
             element={<RutaProtegida rolesPermitidos={['role_administrador']} />}
-          >
+          > 
+          <Route path="/admin/operadores" element={<AdminOperadores />} />
+
             <Route path="produccion" element={<AdminLotes />} />
             <Route path="clientes" element={<AdminClientes />} />
             <Route path="pedidos" element={<AdminPedidos />} />
@@ -47,8 +53,8 @@ function App() {
             path="/operador"
             element={<RutaProtegida rolesPermitidos={['role_operador']} />}
           >
-            <Route path="pedidos" element={<h1>Operador</h1>} />
-            <Route path="dashboard" element={<h1>Dashboard</h1>} />
+            <Route path="pedidos" element={<AdminPedidos />} />
+            <Route path="dashboard" element={<AdminLotes/>} />
           </Route>
 
           {/* Rutas de Cliente */}
@@ -56,8 +62,8 @@ function App() {
             path="/cliente"
             element={<RutaProtegida rolesPermitidos={['role_cliente']} />}
           >
-            <Route path="home" element={<h1>Home</h1>} />
-            <Route path="listaproductos" element={<ListaProductos />} />
+            <Route path="home" element={<ListaProductos/>} />
+            <Route path="listaproductos" element={<ConsultarProductos />} />
           </Route>
 
           <Route path="*" element={<Error404 />} />

@@ -18,6 +18,7 @@ export const FromProductoLote = ({
   isModal = false,
 }) => {
   const [form, setform] = useState(initialForm);
+  const [validationError, setValidationError] = useState(null); // Nuevo estado para errores de validación
 
   useEffect(() => {
     if (dataToEdit && isModal) {
@@ -32,6 +33,7 @@ export const FromProductoLote = ({
       });
     } else {
       setform(initialForm);
+      setValidationError(null); // Limpiar error cuando no se edita
     }
   }, [dataToEdit, isModal]);
 
@@ -46,29 +48,21 @@ export const FromProductoLote = ({
     e.preventDefault();
     console.log("Formulario actual:", form);
 
-    // Validaciones (solo para el formulario inicial)
-    if (!isModal) {
-      if (!form.codigo_lote) {
-        alert("Datos incompletos: código de lote");
-        return;
-      }
-      if (!form.fecha_produccion) {
-        alert("Datos incompletos: fecha de producción");
-        return;
-      }
-      if (!form.producto_id) {
-        alert("Datos incompletos: tipo de producto");
-        return;
-      }
-      if (!form.cantidad) {
-        alert("Datos incompletos: cantidad");
-        return;
-      }
-      if (!form.estado) {
-        alert("Datos incompletos: estado");
-        return;
-      }
+    // Validaciones
+    if (
+      !form.codigo_lote ||
+      !form.fecha_produccion ||
+      !form.producto_id ||
+      !form.cantidad ||
+      !form.estado
+    ) {
+      setValidationError("Por favor, complete todos los campos.");
+      return;
+    }
+    setValidationError(null); // Limpiar errores si todo está bien
 
+    // Lógica para el formulario que NO es modal (el de creación)
+    if (!isModal) {
       const formattedData = {
         codigoLote: form.codigo_lote,
         fechaProduccion: form.fecha_produccion,
@@ -79,33 +73,48 @@ export const FromProductoLote = ({
         estado: form.estado,
       };
 
-      if (form.id !== null) {
-        formattedData.id = form.id;
-      }
-
-      console.log("Datos enviados:", formattedData);
-      createData(formattedData);
-      handleReset();
+      console.log("Datos enviados para creación:", formattedData);
+      createData(formattedData); // Llama a createData, que ahora oculta el formulario en AdminLotes
+      handleReset(); // Limpia el formulario después de enviar
+    } else {
+      // Si es un modal, esto debería ser manejado por updateData o patchData
+      // según el contexto de tu aplicación.
+      // Actualmente, el modal solo tiene la opción de cambiar a "Defectuoso" y llama a patchData.
+      // Si el modal fuera para actualizar todos los campos, la lógica aquí cambiaría.
     }
   };
 
   const handlePatch = () => {
     if (!form.id) {
-      alert("No se puede actualizar: ID no definido");
+      alert("No se puede actualizar: ID del lote no definido.");
       return;
     }
 
-    const patchDataPayload = { estado: form.estado };
-    patchData(form.id, patchDataPayload);
+    // El patchData en AdminLotes ya recibe el ID y el cuerpo del PATCH (res.body).
+    // Tu `patchData` en `AdminLotes` ya lo espera así: `patchData(id, options.body)`.
+    // Sin embargo, tu función `patchData` en `AdminLotes` solo espera el `id` y asume el estado "Defectuoso"
+    // dentro de esa función. Vamos a mantener la consistencia con lo que ya tienes.
+    // Solo necesitas pasar el ID.
+
+    patchData(form.id); // Llamar a patchData con solo el ID, como lo espera AdminLotes
+
+    // No reseteamos el formulario aquí ya que el modal se cerrará automáticamente
+    // después de la actualización exitosa en AdminLotes.
   };
 
   const handleReset = () => {
     setform(initialForm);
     setdataToEdit(null);
+    setValidationError(null); // Limpiar errores al resetear
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className="p-4">
+      {validationError && ( // Mostrar errores de validación aquí
+        <div className="alert alert-danger mb-3" role="alert">
+          {validationError}
+        </div>
+      )}
       {isModal ? (
         // Formulario del modal: solo el select de estado y botón Actualizar
         <div className="mb-3">
@@ -120,13 +129,23 @@ export const FromProductoLote = ({
               name="estado"
               value={form.estado}
               onChange={handleChange}
+              // Si el estado es "Vendido" o "Defectuoso", deshabilita el select
+              disabled={form.estado === "Vendido" || form.estado === "Defectuoso"}
             >
-              <option value="Defectuoso">Defectuoso</option>
+              {/* Opciones disponibles si el estado actual es "Disponible" o nulo */}
+              {form.estado === "Disponible" || !form.estado ? (
+                <option value="Defectuoso">Defectuoso</option>
+              ) : (
+                // Mostrar el estado actual si no es "Disponible"
+                <option value={form.estado}>{form.estado}</option>
+              )}
             </select>
             <button
               type="button"
               className="btn btn-outline-primary"
               onClick={handlePatch}
+              // Deshabilita el botón si el estado ya es "Vendido" o "Defectuoso"
+              disabled={form.estado === "Vendido" || form.estado === "Defectuoso"}
             >
               Actualizar
             </button>
@@ -145,7 +164,6 @@ export const FromProductoLote = ({
                 className="form-control"
                 id="codigo_lote"
                 placeholder="Ej: L005"
-                required
                 value={form.codigo_lote}
                 name="codigo_lote"
                 onChange={handleChange}
@@ -159,7 +177,6 @@ export const FromProductoLote = ({
                 type="date"
                 className="form-control"
                 id="fecha_produccion"
-                required
                 value={form.fecha_produccion}
                 name="fecha_produccion"
                 onChange={handleChange}
@@ -172,7 +189,6 @@ export const FromProductoLote = ({
               <select
                 className="form-select"
                 id="producto_id"
-                required
                 value={form.producto_id}
                 name="producto_id"
                 onChange={handleChange}
@@ -183,6 +199,8 @@ export const FromProductoLote = ({
                 <option value="3">Atún en salsa</option>
               </select>
             </div>
+          </div>
+          <div className="col-md-6">
             <div className="mb-3">
               <label htmlFor="cantidad" className="form-label">
                 Cantidad Producida
@@ -191,14 +209,11 @@ export const FromProductoLote = ({
                 type="number"
                 className="form-control"
                 id="cantidad"
-                required
                 name="cantidad"
                 value={form.cantidad}
                 onChange={handleChange}
               />
             </div>
-          </div>
-          <div className="col-md-6">
             <div className="mb-3">
               <label htmlFor="estado" className="form-label">
                 Estado
@@ -206,7 +221,6 @@ export const FromProductoLote = ({
               <select
                 className="form-select"
                 id="estado"
-                required
                 name="estado"
                 value={form.estado}
                 onChange={handleChange}
@@ -221,6 +235,13 @@ export const FromProductoLote = ({
           <div className="d-grid mt-3">
             <button type="submit" className="btn btn-dark fw-semibold">
               Registrar Lote
+            </button>
+            <button
+              type="button"
+              className="btn btn-secondary mt-2"
+              onClick={handleReset}
+            >
+              Limpiar Campos
             </button>
           </div>
         </div>

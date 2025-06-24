@@ -7,12 +7,14 @@ export const AdminReportes = () => {
   const [ventasPorTipo, setVentasPorTipo] = useState({});
   const [ventasPorCliente, setVentasPorCliente] = useState({});
   const [produccionData, setProduccionData] = useState({});
+  const [inventarioData, setInventarioData] = useState({});
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const urlVentasProducto = "http://localhost:8081/api/admin/reportes/ventas-producto";
   const urlVentasCliente = "http://localhost:8081/api/admin/reportes/ventas-cliente";
   const urlProduccion = "http://localhost:8081/api/admin/reportes/produccion";
+  const urlInventario = "http://localhost:8081/api/admin/reportes/inventario";
   let api = helpHttp();
 
   useEffect(() => {
@@ -46,7 +48,22 @@ export const AdminReportes = () => {
       }
     });
 
-    Promise.all([fetchVentasPorTipo, fetchVentasPorCliente, fetchProduccion]).then((results) => {
+    const fetchInventario = api.get(urlInventario).then((res) => {
+      if (!res.err) {
+        setInventarioData(res || {});
+        return { success: true };
+      } else {
+        setInventarioData({});
+        return { success: false, error: res };
+      }
+    });
+
+    Promise.all([
+      fetchVentasPorTipo,
+      fetchVentasPorCliente,
+      fetchProduccion,
+      fetchInventario,
+    ]).then((results) => {
       const hasError = results.some((result) => !result.success);
       if (hasError) {
         setError(results.find((result) => !result.success)?.error || { message: "Error desconocido" });
@@ -55,20 +72,22 @@ export const AdminReportes = () => {
       }
       setLoading(false);
     });
-  }, [urlVentasProducto, urlVentasCliente, urlProduccion]);
+  }, [urlVentasProducto, urlVentasCliente, urlProduccion, urlInventario]);
 
   return (
     <>
       <div className="text-center mb-5 mt-3">
         <h1 className="fw-bold">Reportes de Ventas y Producción</h1>
-        <p className="text-muted">Consulta las ventas por tipo de producto, cliente y reportes de producción</p>
+        <p className="text-muted">
+          Consulta las ventas por tipo de producto, cliente, reportes de producción e inventario
+        </p>
       </div>
 
       <div className="container mt-3">
         {loading && <div className="alert alert-info">Cargando...</div>}
         {error && (
           <div className="alert alert-danger">
-            Error al cargar los datos: {error.message || "Inténtalo de nuevo"}
+             {error.message || "Error al cargar los datos"}
           </div>
         )}
         {!loading && (
@@ -82,9 +101,12 @@ export const AdminReportes = () => {
                   badgeBgColor="bg-success"
                 />
               ) : (
-                <div className="alert alert-warning">No hay datos de ventas por producto disponibles</div>
+                <div className="alert alert-warning">
+                  No hay datos de ventas por producto disponibles
+                </div>
               )}
             </div>
+
             <div className="col-md-4 mb-4">
               {Object.keys(ventasPorCliente).length > 0 ? (
                 <VentasCard
@@ -94,19 +116,39 @@ export const AdminReportes = () => {
                   badgeBgColor="bg-warning"
                 />
               ) : (
-                <div className="alert alert-warning">No hay datos de ventas por cliente disponibles</div>
+                <div className="alert alert-warning">
+                  No hay datos de ventas por cliente disponibles
+                </div>
               )}
             </div>
+
             <div className="col-md-4 mb-4">
               {Object.keys(produccionData).length > 0 ? (
-              <VentasCard
-              title="Reportes de Producción"
-              data={produccionData}
-              headerBgColor="bg-secondary"
-              badgeBgColor="bg-info"
-            />
+                <VentasCard
+                  title="Reportes de Producción"
+                  data={produccionData}
+                  headerBgColor="bg-secondary"
+                  badgeBgColor="bg-info"
+                />
               ) : (
-                <div className="alert alert-warning">No hay datos de producción disponibles</div>
+                <div className="alert alert-warning">
+                  No hay datos de producción disponibles
+                </div>
+              )}
+            </div>
+
+            <div className="col-md-4 mb-4">
+              {Object.keys(inventarioData).length > 0 ? (
+                <VentasCard
+                  title="Reporte de Inventario"
+                  data={inventarioData}
+                  headerBgColor="bg-dark"
+                  badgeBgColor="bg-secondary"
+                />
+              ) : (
+                <div className="alert alert-warning">
+                  No hay datos de inventario disponibles
+                </div>
               )}
             </div>
           </div>

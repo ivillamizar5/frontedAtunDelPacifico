@@ -1,16 +1,16 @@
-import React, { useEffect, useState } from 'react'
-import { Pedidos } from '../../componentes/Pedidos'
+import React, { useEffect, useState } from 'react';
+import { Pedidos } from '../../componentes/Pedidos';
 import { helpHttp } from '../../helps/helpHttp';
 import { Table } from '../../componentes/Table';
 
-export const AdminPedidos = () => { 
-  
-  
-  
+export const AdminPedidos = () => {
   const [db, setDb] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [nuevoEstado, setNuevoEstado] = useState("");
+  const [filtroEstado, setFiltroEstado] = useState("");
+  const [filtroNombre, setFiltroNombre] = useState("");
 
   const api = helpHttp();
   const url = "http://localhost:8081/api/cliente/pedidos";
@@ -29,18 +29,59 @@ export const AdminPedidos = () => {
   }, [url]);
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('es-ES', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
+    return new Date(dateString).toLocaleDateString("es-ES", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
     });
   };
 
   const formatCurrency = (value) => {
-    return new Intl.NumberFormat('es-CO', {
-      style: 'currency',
-      currency: 'COP'
+    return new Intl.NumberFormat("es-CO", {
+      style: "currency",
+      currency: "COP",
     }).format(value);
+  };
+
+  const handleEstadoChange = (e) => {
+    setNuevoEstado(e.target.value);
+  };
+
+  const actualizarEstado = () => {
+    const urlConQuery = `http://localhost:8081/api/operador/pedidos/${selectedOrder.id}?estado=${nuevoEstado}`;
+
+    api.patch(urlConQuery, {
+      headers: { "Content-Type": "application/json" },
+    }).then((res) => {
+      if (!res.err) {
+        alert("Estado actualizado correctamente");
+        setDb((prevDb) =>
+          prevDb.map((pedido) =>
+            pedido.id === selectedOrder.id ? { ...pedido, estado: nuevoEstado } : pedido
+          )
+        );
+        setSelectedOrder((prev) => ({ ...prev, estado: nuevoEstado }));
+      } else {
+        alert("Error al actualizar el estado");
+      }
+    });
+  };
+
+  const eliminarPedido = (id) => {
+    const confirmDelete = window.confirm("¿Estás seguro de eliminar este pedido?");
+    if (!confirmDelete) return;
+
+    const deleteUrl = `http://localhost:8081/api/operador/pedidos/${id}`;
+    api.del(deleteUrl).then((res) => {
+      if (!res.err) {
+        alert("Pedido eliminado correctamente");
+        setDb((prevDb) => prevDb.filter((pedido) => pedido.id !== id));
+      } else {
+        const parsedBody = JSON.parse(res.body);
+        const mensaje = parsedBody.message;
+        alert(mensaje || "Error al eliminar el pedido");
+      }
+    });
   };
 
   const renderRow = ({ item, modalId }) => (
@@ -49,10 +90,12 @@ export const AdminPedidos = () => {
       <td>
         <span
           className={`badge ${
-            item.estado === "En Proceso"
+            item.estado === "En_Proceso"
               ? "text-bg-warning"
               : item.estado === "Pendiente"
               ? "text-bg-secondary"
+              : item.estado === "Cancelado"
+              ? "text-bg-danger"
               : "text-bg-success"
           }`}
         >
@@ -61,16 +104,35 @@ export const AdminPedidos = () => {
       </td>
       <td>
         <button
-          className="btn btn-primary btn-sm"
+          className="btn btn-outline-primary btn-sm me-2"
           data-bs-toggle="modal"
           data-bs-target={`#${modalId}`}
-          onClick={() => setSelectedOrder(item)}
+          onClick={() => {
+            setSelectedOrder(item);
+            setNuevoEstado(item.estado);
+          }}
         >
-          Ver Detalles
+          <i className="fas fa-eye"></i>
+        </button>
+
+        <button
+          className="btn btn-danger btn-sm"
+          onClick={() => eliminarPedido(item.id)}
+        >
+          <i className="fas fa-trash-alt "></i>
         </button>
       </td>
     </tr>
   );
+
+  const pedidosFiltrados = db?.filter((pedido) => {
+    const coincideNombre = pedido.cliente.nombre
+      .toLowerCase()
+      .includes(filtroNombre.toLowerCase());
+    const coincideEstado =
+      filtroEstado === "" || pedido.estado === filtroEstado;
+    return coincideNombre && coincideEstado;
+  });
 
   if (loading) return <div className="text-center mt-5">Cargando...</div>;
   if (error) return <div className="alert alert-danger mt-5">Error al cargar los datos</div>;
@@ -82,9 +144,35 @@ export const AdminPedidos = () => {
         <p className="text-muted">Consultar pedidos realizados por clientes</p>
       </div>
 
-      {db && (
+      {/* Filtros */}
+      <div className="row mb-4">
+        <div className="col-md-6">
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Filtrar por nombre del cliente"
+            value={filtroNombre}
+            onChange={(e) => setFiltroNombre(e.target.value)}
+          />
+        </div>
+        <div className="col-md-6">
+          <select
+            className="form-select"
+            value={filtroEstado}
+            onChange={(e) => setFiltroEstado(e.target.value)}
+          >
+            <option value="">Todos los estados</option>
+            <option value="Pendiente">Pendiente</option>
+            <option value="En_Proceso">En Proceso</option>
+            <option value="Enviado">Enviado</option>
+            <option value="Cancelado">Cancelado</option>
+          </select>
+        </div>
+      </div>
+
+      {pedidosFiltrados && (
         <Table
-          data={db}
+          data={pedidosFiltrados}
           nombreTabla="Pedidos de Clientes"
           tableHeader={["Nombre del Cliente", "Estado", "Acción"]}
           modalId="orderModal"
@@ -113,7 +201,16 @@ export const AdminPedidos = () => {
                     <div className="col-md-6">
                       <p><strong>Teléfono:</strong> {selectedOrder.cliente.telefono}</p>
                       <p><strong>Dirección:</strong> {selectedOrder.cliente.direccion}</p>
-                      <p><strong>Estado:</strong> {selectedOrder.cliente.estado}</p>
+                      <label><strong>Estado:</strong></label>
+                      <select value={nuevoEstado} onChange={handleEstadoChange} className="form-select my-2">
+                        <option value="Pendiente">Pendiente</option>
+                        <option value="En_Proceso">En Proceso</option>
+                        <option value="Enviado">Enviado</option>
+                        <option value="Cancelado">Cancelado</option>
+                      </select>
+                      <button className="btn btn-success btn-sm mt-2" onClick={actualizarEstado}>
+                        Actualizar Estado
+                      </button>
                     </div>
                   </div>
 
@@ -125,7 +222,6 @@ export const AdminPedidos = () => {
                     </div>
                     <div className="col-md-6">
                       <p><strong>Total:</strong> {formatCurrency(selectedOrder.total)}</p>
-                      <p><strong>Estado:</strong> {selectedOrder.estado}</p>
                     </div>
                   </div>
 

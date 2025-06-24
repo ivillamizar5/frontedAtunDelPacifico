@@ -6,13 +6,13 @@ export const Table = ({
   tableHeader,
   data,
   renderRow, // Función o componente para renderizar las filas
-  modalId, // ID del modal
+  modalId, // ID del modal para el formulario de edición
   modalFormComponent, // Componente del formulario para el modal
-  usersPerPage = 10, // Opcional: número de filas por página
+  usersPerPage = 3, // Número de filas por página, con un valor por defecto
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Paginación
+  // Lógica de Paginación
   const indexOfLast = currentPage * usersPerPage;
   const indexOfFirst = indexOfLast - usersPerPage;
   const currentData = data.slice(indexOfFirst, indexOfLast);
@@ -37,51 +37,69 @@ export const Table = ({
               </thead>
               <tbody>
                 {currentData.length > 0 ? (
-                  currentData.map((item, index) =>
-                    renderRow({ item, index, modalId })
+                  currentData.map((item) =>
+                    renderRow({ item, modalId })
                   )
                 ) : (
                   <tr>
-                    <td colSpan={tableHeader.length}>Sin datos</td>
+                    <td colSpan={tableHeader.length} className="text-center">
+                      No hay datos para mostrar.
+                    </td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
-          {/* Paginación Bootstrap */}
-          <div className="card-footer d-flex justify-content-center">
-            <nav>
-              <ul className="pagination mb-0">
-                {Array.from({ length: totalPages }, (_, i) => (
-                  <li
-                    className={`page-item ${currentPage === i + 1 ? "active" : ""}`}
-                    key={i}
-                  >
+
+          {/* Sección de Paginación de Bootstrap */}
+          {totalPages > 1 && ( // Solo muestra la paginación si hay más de una página
+            <div className="card-footer d-flex justify-content-center">
+              <nav aria-label="Navegación de páginas">
+                <ul className="pagination mb-0">
+                  {/* Botón "Anterior" */}
+                  <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
                     <button
-                      className="page-link bg-dark text-white"
-                      onClick={() => handlePageChange(i + 1)}
+                      className="page-link"
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      aria-label="Anterior"
                     >
-                      {i + 1}
+                      &laquo;
                     </button>
                   </li>
-                ))}
-              </ul>
-            </nav>
-          </div>
+
+                  {/* Números de Página */}
+                  {Array.from({ length: totalPages }, (_, i) => (
+                    <li
+                      className={`page-item ${currentPage === i + 1 ? "active" : ""}`}
+                      key={i}
+                    >
+                      <button
+                        className="page-link"
+                        onClick={() => handlePageChange(i + 1)}
+                      >
+                        {i + 1}
+                      </button>
+                    </li>
+                  ))}
+
+                  {/* Botón "Siguiente" */}
+                  <li className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}>
+                    <button
+                      className="page-link"
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      aria-label="Siguiente"
+                    >
+                      &raquo;
+                    </button>
+                  </li>
+                </ul>
+              </nav>
+            </div>
+          )}
         </div>
       </div>
     </>
   );
 };
-
-
-
-
-
-
-
-
-
-
-
-

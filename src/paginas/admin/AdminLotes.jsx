@@ -3,12 +3,16 @@ import { Table } from "../../componentes/Table";
 import { helpHttp } from "../../helps/helpHttp";
 import { FromProductoLote } from "../../componentes/FromProductoLote";
 import { Louder } from "../../componentes/Louder";
+import { Message } from "../../componentes/Message"; // Importar Message para mostrar mensajes de éxito/error
 
 export const AdminLotes = () => {
   const [db, setdb] = useState(null);
   const [dataToEdit, setdataToEdit] = useState(null);
   const [error, seterror] = useState(null);
   const [loading, setloading] = useState(true);
+  const [successMessage, setSuccessMessage] = useState(null); // Nuevo estado para mensajes de éxito
+  const [showForm, setShowForm] = useState(false); // Nuevo estado para controlar la visibilidad del formulario
+
   // Estados para los filtros
   const [filterTipo, setFilterTipo] = useState("");
   const [filterFecha, setFilterFecha] = useState("");
@@ -18,6 +22,7 @@ export const AdminLotes = () => {
   let url = "http://localhost:8081/api/operador/lotes";
 
   useEffect(() => {
+    setloading(true);
     api.get(url).then((res) => {
       if (!res.err) {
         setdb(res);
@@ -29,7 +34,6 @@ export const AdminLotes = () => {
       setloading(false);
     });
   }, [url]);
-
 
   // Función para filtrar los datos
   const filteredData = db
@@ -68,9 +72,19 @@ export const AdminLotes = () => {
     api.post(url, options).then((res) => {
       if (!res.err) {
         setdb([...db, res]);
+        setSuccessMessage("Lote registrado exitosamente.");
+        setShowForm(false); // Ocultar el formulario después de un registro exitoso
       } else {
-        seterror(res);
+        const message =
+          typeof res.body === "string"
+            ? res.body
+            : res.body?.message || "Error desconocido al registrar lote.";
+        seterror(message);
       }
+      setTimeout(() => {
+        seterror(null);
+        setSuccessMessage(null);
+      }, 4000);
     });
   };
 
@@ -85,9 +99,18 @@ export const AdminLotes = () => {
       if (!res.err) {
         let newData = db.map((el) => (el.id === data.id ? res : el));
         setdb(newData);
+        setSuccessMessage("Lote actualizado exitosamente.");
       } else {
-        seterror(res);
+        const message =
+          typeof res.body === "string"
+            ? res.body
+            : res.body?.message || "Error desconocido al actualizar lote.";
+        seterror(message);
       }
+      setTimeout(() => {
+        seterror(null);
+        setSuccessMessage(null);
+      }, 4000);
     });
   };
 
@@ -96,19 +119,28 @@ export const AdminLotes = () => {
     let options = {
       headers: { "content-type": "application/json" },
     };
-console.log( options, "opciones");
+    console.log(options, "opciones");
     api.patch(endpoint, options).then((res) => {
       console.log(res, "respuesta");
       if (!res.err) {
         let newData = db.map((el) => (el.id === id ? { ...el, ...res } : el));
-        
         setdb(newData);
-        const modal = window.bootstrap.Modal.getInstance(document.getElementById("editLoteModal"));
-        modal.hide();
+        setSuccessMessage("Lote marcado como defectuoso exitosamente.");
+        const modal = window.bootstrap.Modal.getInstance(
+          document.getElementById("editLoteModal")
+        );
+        if (modal) modal.hide();
       } else {
-        seterror(res);
-        alert("Error al actualizar el estado: " + (res.message || "Error desconocido"));
+        const message =
+          typeof res.body === "string"
+            ? res.body
+            : res.body?.message || "Error desconocido al marcar lote como defectuoso.";
+        seterror(message);
       }
+      setTimeout(() => {
+        seterror(null);
+        setSuccessMessage(null);
+      }, 4000);
     });
   };
 
@@ -126,9 +158,18 @@ console.log( options, "opciones");
         if (!res.err) {
           let newData = db.filter((el) => el.id !== id);
           setdb(newData);
+          setSuccessMessage("Lote eliminado exitosamente.");
         } else {
-          seterror(res);
+          const message =
+            typeof res.body === "string"
+              ? res.body
+              : res.body?.message || "Error desconocido al eliminar lote.";
+          seterror(message);
         }
+        setTimeout(() => {
+          seterror(null);
+          setSuccessMessage(null);
+        }, 4000);
       });
     }
   };
@@ -140,33 +181,35 @@ console.log( options, "opciones");
       <td>{item.producto.nombre}</td>
       <td>{item.cantidad}</td>
       <td>
-<span
-  className={`badge ${
-    item.estado === "Disponible"
-      ? "text-bg-success"
-      : item.estado === "Vendido"
-      ? "text-bg-primary"
-      : item.estado === "Defectuoso"
-      ? "text-bg-danger"
-      : "text-bg-secondary"
-  }`}
->
-  {item.estado}
-</span>
-
+        <span
+          className={`badge ${
+            item.estado === "Disponible"
+              ? "text-bg-success"
+              : item.estado === "Vendido"
+              ? "text-bg-primary"
+              : item.estado === "Defectuoso"
+              ? "text-bg-danger"
+              : "text-bg-secondary"
+          }`}
+        >
+          {item.estado}
+        </span>
       </td>
       <td>
-        {(item.estado !== "Vendido" && item.estado !== "Defectuoso")  ? (
+        {item.estado !== "Vendido" && item.estado !== "Defectuoso" ? (
           <button
-          onClick={() => {
-            setdataToEdit(item);
-            const modal = new window.bootstrap.Modal(document.getElementById(modalId));
-            modal.show();
-          }}
-          className="ms-3 mt-1 fas fa-edit border border-0 text-primary"
-        ></button>
-        ) : <span></span>
-        }
+            onClick={() => {
+              setdataToEdit(item);
+              const modal = new window.bootstrap.Modal(
+                document.getElementById(modalId)
+              );
+              modal.show();
+            }}
+            className="ms-3 mt-1 fas fa-edit border border-0 text-primary"
+          ></button>
+        ) : (
+          <span></span>
+        )}
         <button
           onClick={() => deleteData(item.id)}
           className="ms-3 mt-1 fas fa-trash-alt border border-0 text-danger"
@@ -184,15 +227,40 @@ console.log( options, "opciones");
         </p>
       </div>
 
+      {loading && <Louder />}
+      {error && <Message msg={error} bgColor="alert-danger" />}
+      {successMessage && <Message msg={successMessage} bgColor="alert-success" />}
+
       <div className="container mt-3">
-        <FromProductoLote
-          createData={createData}
-          updateData={updateData}
-          patchData={patchData}
-          dataToEdit={dataToEdit}
-          setdataToEdit={setdataToEdit}
-          isModal={false}
-        />
+        <div className="d-flex justify-content-end mb-3">
+          <button
+            className="btn btn-success"
+            onClick={() => {
+              setShowForm(!showForm); // Alternar la visibilidad del formulario
+              setdataToEdit(null); // Asegurarse de limpiar el estado de edición al abrir el form de registro
+            }}
+          >
+            {showForm ? "Ocultar Formulario" : "Registrar Nuevo Lote"}
+          </button>
+        </div>
+
+        {showForm && ( // Renderiza el FromProductoLote solo si showForm es true
+          <div className="card mb-4">
+            <div className="card-header">
+              <h3>{dataToEdit ? "Editar Lote" : "Registrar Nuevo Lote"}</h3>
+            </div>
+            <div className="card-body">
+              <FromProductoLote
+                createData={createData}
+                updateData={updateData}
+                patchData={patchData}
+                dataToEdit={dataToEdit}
+                setdataToEdit={setdataToEdit}
+                isModal={false} // Este formulario no es un modal
+              />
+            </div>
+          </div>
+        )}
 
         {/* Sección de Filtros */}
         {db && (
@@ -241,8 +309,8 @@ console.log( options, "opciones");
                     >
                       <option value="">Todos</option>
                       <option value="Disponible">Disponible</option>
-                      <option value="En_Proceso">Vendido</option>
-                      <option value="Enviado">Defectuoso</option>
+                      <option value="Vendido">Vendido</option> {/* Corregido el valor */}
+                      <option value="Defectuoso">Defectuoso</option> {/* Corregido el valor */}
                     </select>
                   </div>
                 </div>
@@ -260,40 +328,39 @@ console.log( options, "opciones");
           </div>
         )}
 
-
-{/*  item.estado === "Disponible"
-      ? "text-bg-success"
-      : item.estado === "Vendido" */}
-
         {/* Tabla con datos filtrados */}
-        {loading ? <Louder/> : db && (
-          <Table
-            deleteData={deleteData}
-            data={filteredData}
-            nombreTabla={"Lotes de producción"}
-            setdataToEdit={setdataToEdit}
-            tableHeader={[
-              "Código Lote",
-              "Fecha de Producción",
-              "Tipo de Producto",
-              "Cantidad Producida",
-              "Estado",
-              "Acción",
-            ]}
-            modalId="editLoteModal"
-            modalFormComponent={
-              <FromProductoLote
-                createData={createData}
-                updateData={updateData}
-                patchData={patchData}
-                dataToEdit={dataToEdit}
-                setdataToEdit={setdataToEdit}
-                isModal={true}
-              />
-            }
-            renderRow={renderRow}
-          />
-        )} 
+        {loading ? (
+          <Louder />
+        ) : (
+          db && (
+            <Table
+              deleteData={deleteData}
+              data={filteredData}
+              nombreTabla={"Lotes de producción"}
+              setdataToEdit={setdataToEdit}
+              tableHeader={[
+                "Código Lote",
+                "Fecha de Producción",
+                "Tipo de Producto",
+                "Cantidad Producida",
+                "Estado",
+                "Acción",
+              ]}
+              modalId="editLoteModal"
+              modalFormComponent={
+                <FromProductoLote
+                  createData={createData}
+                  updateData={updateData}
+                  patchData={patchData}
+                  dataToEdit={dataToEdit}
+                  setdataToEdit={setdataToEdit}
+                  isModal={true}
+                />
+              }
+              renderRow={renderRow}
+            />
+          )
+        )}
       </div>
     </>
   );

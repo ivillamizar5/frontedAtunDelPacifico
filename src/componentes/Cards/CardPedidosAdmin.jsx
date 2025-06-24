@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 // import { ModalClintePedido } from "./Modal/ModalDetallePedido";
-import { ModalClintePedido } from "../Modal/ModalDetallePedido";
+import { ModalClintePedido } from "../Modal/ModalClintePedido";
 
 export const CardPedidosAdmin = ({ data }) => {
   // const agrupado = {};
@@ -26,7 +26,7 @@ export const CardPedidosAdmin = ({ data }) => {
 
   return (
     <>
-      <ModalClintePedido modalId="detallePedido" data={data} />
+      {/* <ModalClintePedido modalId="detallePedido" data={data} /> */}
 
       <div className="row">
         <div className="col-sm-6 mb-4 col-lg-4">
