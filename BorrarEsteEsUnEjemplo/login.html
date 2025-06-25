@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Login</title>
+</head>
+<body>
+  <h2>Simular login</h2>
+  <select id="role">
+    <option value="ADMIN">ADMIN</option>
+    <option value="VENDEDOR">VENDEDOR</option>
+    <option value="CLIENTE">CLIENTE</option>
+  </select>
+  <button onclick="simularLogin()">Iniciar sesión</button>
+
+  <script>
+    function crearTokenSimulado(role) {
+      const header = btoa(JSON.stringify({ alg: "HS256", typ: "JWT" }));
+      const payload = btoa(JSON.stringify({ role }));
+      const signature = btoa("firma-falsa");
+      return `${header}.${payload}.${signature}`;
+    }
+
+    function simularLogin() {
+      const role = document.getElementById("role").value;
+      const token = crearTokenSimulado(role);
+      localStorage.setItem("token", token);
+      window.location.href = "index.html";
+    }
+  </script>
+</body>
+</html>

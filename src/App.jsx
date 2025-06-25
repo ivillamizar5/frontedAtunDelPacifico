@@ -2,7 +2,7 @@ import { NavBar } from './componentes/NavBar';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import { AuthProvider } from './componentes/AuthContext';
 import { RutaProtegida } from './componentes/RutaProtegida';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { Login } from './paginas/Login';
 import { Registrarse } from './paginas/Registrarse';
 import { AdminLotes } from './paginas/admin/AdminLotes';
@@ -66,7 +66,7 @@ function App() {
             <Route path="listaproductos" element={<ConsultarProductos />} />
           </Route>
 
-          <Route path="*" element={<Error404 />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AuthProvider>
       {/* <Footer/> */}

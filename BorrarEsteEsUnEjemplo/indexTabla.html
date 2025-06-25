@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>CRUD Demo con API JSONPlaceholder</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #f2f2f2;
+      padding: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+    }
+
+    th {
+      background: #333;
+      color: white;
+    }
+
+    button {
+      margin: 2px;
+      padding: 6px 10px;
+      border: none;
+      color: white;
+      cursor: pointer;
+      border-radius: 3px;
+    }
+
+    .edit-btn {
+      background: #007bff;
+    }
+
+    .delete-btn {
+      background: #dc3545;
+    }
+
+    #modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+    }
+
+    #modal-content {
+      background: white;
+      padding: 20px;
+      width: 300px;
+      border-radius: 5px;
+    }
+
+    input {
+      width: 100%;
+      padding: 8px;
+      margin: 5px 0 10px;
+    }
+
+    .modal-buttons {
+      display: flex;
+      justify-content: space-between;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Usuarios (JSONPlaceholder)</h2>
+  <table id="dataTable">
+    <thead>
+      <tr>
+        <th>ID</th><th>Nombre</th><th>Email</th><th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <!-- Modal -->
+  <div id="modal">
+    <div id="modal-content">
+      <h3>Editar Usuario</h3>
+      <form id="editForm">
+        <input type="hidden" id="editId">
+        <label>Nombre:</label>
+        <input type="text" id="editName" required>
+        <label>Email:</label>
+        <input type="text" id="editEmail" required>
+        <div class="modal-buttons">
+          <button type="submit" class="edit-btn">Actualizar</button>
+          <button type="button" class="delete-btn" id="deleteBtn">Eliminar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'https://jsonplaceholder.typicode.com/users';
+    const tbody = document.querySelector("#dataTable tbody");
+    const modal = document.getElementById("modal");
+    const editForm = document.getElementById("editForm");
+    const editId = document.getElementById("editId");
+    const editName = document.getElementById("editName");
+    const editEmail = document.getElementById("editEmail");
+    const deleteBtn = document.getElementById("deleteBtn");
+
+    let currentId = null;
+
+    // Cargar datos de ejemplo
+    async function loadData() {
+      tbody.innerHTML = "";
+      const res = await fetch(API_URL);
+      const data = await res.json();
+      data.forEach(user => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${user.id}</td>
+          <td>${user.name}</td>
+          <td>${user.email}</td>
+          <td>
+            <button class="edit-btn" onclick="openModal(${user.id}, '${user.name}', '${user.email}')">Editar</button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    // Abrir modal
+    window.openModal = (id, name, email) => {
+      modal.style.display = "flex";
+      editId.value = id;
+      editName.value = name;
+      editEmail.value = email;
+      currentId = id;
+    };
+
+    // Cerrar modal al hacer clic fuera
+    window.onclick = e => {
+      if (e.target === modal) {
+        modal.style.display = "none";
+      }
+    };
+
+    // Simular actualización
+    editForm.onsubmit = async (e) => {
+      e.preventDefault();
+      const data = {
+        name: editName.value,
+        email: editEmail.value
+      };
+      await fetch(`${API_URL}/${editId.value}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+      alert("Actualización simulada correctamente.");
+      modal.style.display = "none";
+    };
+
+    // Simular eliminación
+    deleteBtn.onclick = async () => {
+      await fetch(`${API_URL}/${editId.value}`, {
+        method: "DELETE"
+      });
+      alert("Eliminación simulada correctamente.");
+      modal.style.display = "none";
+    };
+
+    loadData();
+  </script>
+</body>
+</html>
